@@ -18,6 +18,8 @@ class PlayerLyricManager(
 ) {
     private lateinit var lyricGroups: List<List<LyricNode>>
     private lateinit var frames: List<LyricFrame>
+    private var currentTopLineIndex: Int = -1
+    private var currentBottomLineIndex: Int = -1
     private val gson = Gson()
 
     sealed class LyricFrameType {
@@ -78,6 +80,7 @@ class PlayerLyricManager(
     fun updateLyrics(currTime: Double) {
         if (frames.isEmpty()) return
 
+        // Handle frame triggers
         val passedFrames = frames.filter { it.time <= currTime }
         passedFrames.forEach {
             if (it.available) {
@@ -87,73 +90,96 @@ class PlayerLyricManager(
                     LyricFrameType.TITLE_HIDE -> setTitleViewVisible(false)
                     LyricFrameType.COUNTDOWN -> setCountdownTime(it.countdownFrom ?: 0.0)
                     LyricFrameType.LYRIC_TOP -> {
-                        val group: List<LyricNode> = lyricGroups.getOrNull(it.lineIndex ?: 0) ?: emptyList()
+                        currentTopLineIndex = it.lineIndex ?: -1
+                        val group: List<LyricNode> = lyricGroups.getOrNull(currentTopLineIndex) ?: emptyList()
                         setLyricTopView(group.joinToString("") { node -> node.t })
                     }
                     LyricFrameType.LYRIC_BOTTOM -> {
-                        val group: List<LyricNode> = lyricGroups.getOrNull(it.lineIndex ?: 0) ?: emptyList()
+                        currentBottomLineIndex = it.lineIndex ?: -1
+                        val group: List<LyricNode> = lyricGroups.getOrNull(currentBottomLineIndex) ?: emptyList()
                         setLyricBottomView(group.joinToString("") { node -> node.t })
                     }
                     LyricFrameType.COOLDOWN_START -> {
                         setCooldownViewVisible(true)
                         setLyricTopView(null)
                         setLyricBottomView(null)
+                        currentTopLineIndex = -1
+                        currentBottomLineIndex = -1
                     }
                     LyricFrameType.COOLDOWN_END -> setCooldownViewVisible(false)
                 }
             }
         }
 
-        // Update progress for active lyric lines
+        // Update progress for current lyrics
         updateLyricProgress(currTime)
     }
 
     private fun updateLyricProgress(currTime: Double) {
-        lyricGroups.forEachIndexed { groupIndex, group ->
-            if (group.isNotEmpty()) {
-                val firstNode = group.first()
-                val lastNode = group.last()
-
-                // Check if current time is within this group's duration
-                if (currTime >= firstNode.s && currTime <= lastNode.e) {
-                    // Calculate total duration of the group
-                    val groupDuration = lastNode.e - firstNode.s
-                    if (groupDuration > 0) {
-                        // Find the current active node
-                        val activeNode = group.find { currTime >= it.s && currTime <= it.e }
-                        if (activeNode != null) {
-                            // Calculate progress within the current node
-                            val nodeProgress = ((currTime - activeNode.s) / (activeNode.e - activeNode.s)).toFloat()
-                            // Calculate character-based progress
-                            val totalChars = group.joinToString("").length
-                            val charsBefore = lyricGroups.subList(0, groupIndex).sumOf { g -> g.joinToString("").length }
-                            val currentGroupText = group.joinToString("")
-                            var charsUpToNode = 0
-                            val nodeIndex = group.indexOf(activeNode)
-                            for (i in 0 until nodeIndex) {
-                                charsUpToNode += group[i].t.length
-                            }
-                            val progressInGroup = (charsUpToNode + (nodeProgress * activeNode.t.length)) / totalChars
-
-                            // Apply progress to appropriate view based on frame type
-                            val activeFrame = frames.find {
-                                it.lineIndex == groupIndex &&
-                                        (it.type == LyricFrameType.LYRIC_TOP || it.type == LyricFrameType.LYRIC_BOTTOM) &&
-                                        currTime >= it.time
-                            }
-                            if (activeFrame != null) {
-                                val progress = progressInGroup.coerceIn(0f, 1f)
-                                if (activeFrame.type == LyricFrameType.LYRIC_TOP) {
-                                    setLyricTopProgress(progress)
-                                } else {
-                                    setLyricBottomProgress(progress)
-                                }
-                            }
-                        }
-                    }
-                }
+        // Update top lyric progress
+        if (currentTopLineIndex != -1) {
+            val topLine = lyricGroups.getOrNull(currentTopLineIndex) ?: emptyList()
+            if (topLine.isNotEmpty()) {
+                val progress = calculateLineProgress(topLine, currTime)
+                setLyricTopProgress(progress)
             }
         }
+
+        // Update bottom lyric progress
+        if (currentBottomLineIndex != -1) {
+            val bottomLine = lyricGroups.getOrNull(currentBottomLineIndex) ?: emptyList()
+            if (bottomLine.isNotEmpty()) {
+                val progress = calculateLineProgress(bottomLine, currTime)
+                setLyricBottomProgress(progress)
+            }
+        }
+    }
+
+    private fun calculateLineProgress(line: List<LyricNode>, currTime: Double): Float {
+        if (line.isEmpty()) return 0f
+
+        val lineStartTime = line.first().s
+        val lineEndTime = line.last().e
+
+        // Before the line starts
+        if (currTime < lineStartTime) return 0f
+        // After the line ends
+        if (currTime >= lineEndTime) return 1f
+
+        // Find which character we're currently at
+        var currentCharIndex = -1
+        for (i in line.indices) {
+            if (currTime >= line[i].s && currTime < line[i].e) {
+                currentCharIndex = i
+                break
+            }
+        }
+
+        // If between characters, use the previous one
+        if (currentCharIndex == -1) {
+            for (i in line.indices.reversed()) {
+                if (currTime >= line[i].e) {
+                    currentCharIndex = i
+                    break
+                }
+            }
+            // If still not found (shouldn't happen), return full progress
+            if (currentCharIndex == -1) return 1f
+        }
+
+        // Calculate progress up to current character
+        var progress = currentCharIndex.toFloat() / line.size
+
+        // Calculate progress within current character
+        val char = line[currentCharIndex]
+        val charDuration = char.e - char.s
+        if (charDuration > 0) {
+            val charElapsed = currTime - char.s
+            val charProgress = (charElapsed / charDuration).toFloat().coerceIn(0f, 1f)
+            progress += charProgress / line.size
+        }
+
+        return progress.coerceIn(0f, 1f)
     }
 
     private fun createLyricFrames(song: Song, groups: List<List<LyricNode>>): List<LyricFrame> {
@@ -282,9 +308,6 @@ class PlayerLyricManager(
                 flipped = !flipped
             }
         }
-
-        Log.d("PlayerLyricManager", "In createLyricFrames: ${frames.size} frames")
-
         return frames.sortedBy { it.time }
     }
 
@@ -348,5 +371,8 @@ class PlayerLyricManager(
     fun clearLyricViews() {
         binding.playerLyrics.lyricTop.text = ""
         binding.playerLyrics.lyricBottom.text = ""
+        binding.playerLyrics.lyricCountdown.text = ""
+        binding.playerLyrics.lyricTitleContainer.visibility = View.GONE
+        binding.playerLyrics.cooldownContainer.visibility = View.GONE
     }
 }

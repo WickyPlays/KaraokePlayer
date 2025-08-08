@@ -8,9 +8,9 @@ import me.wickyplays.android.karaokeplayer.App
 import me.wickyplays.android.karaokeplayer.player.obj.Song
 import java.io.IOException
 import androidx.core.net.toUri
-import me.wickyplays.android.karaokeplayer.R
 import me.wickyplays.android.karaokeplayer.player.KaraokePlayerCore
 import me.wickyplays.android.karaokeplayer.player.interfaces.KaraokePlayerProcessor
+import java.util.concurrent.TimeUnit
 
 class KaraokeMediaProcessor : KaraokePlayerProcessor() {
     private var mediaPlayer: MediaPlayer? = null
@@ -21,6 +21,11 @@ class KaraokeMediaProcessor : KaraokePlayerProcessor() {
     private var handler: Handler? = null
     private var updateLyricTask: Runnable? = null
     private var core = KaraokePlayerCore.instance
+    private var lastLyricUpdateTime: Double = 0.0
+    private var lastMetaUpdateTime: Double = 0.0
+
+    private val lyricUpdateInterval = 0.016
+    private val metaUpdateInterval = 0.5
 
     override fun processSong(song: Song): Song {
         currentSong = song
@@ -32,39 +37,80 @@ class KaraokeMediaProcessor : KaraokePlayerProcessor() {
             try {
                 mediaPlayer?.release()
                 Log.d("Player", "Starting media player...")
-                val packageName = App.context?.packageName
                 mediaPlayer = MediaPlayer().apply {
-                    setDataSource(App.context!!,
-                        "android.resource://${packageName}/${R.raw.sample}".toUri())
+                    setDataSource(
+                        App.context!!,
+                        song.songPath.toUri()
+                    )
                     prepareAsync()
                     setOnPreparedListener { mp ->
                         mp.start()
                         isPaused = false
                         isStopped = false
+                        lastLyricUpdateTime = 0.0
+                        lastMetaUpdateTime = 0.0
+                        startLyricUpdate()
                     }
                     setOnCompletionListener {
-                        stop(false)
+                        stop(true)
+                        core.skipToNextSong()
+                    }
+                    setOnErrorListener { mp, what, extra ->
+                        Log.e("MediaPlayer", "Error occurred: what=$what, extra=$extra")
+                        stop(true)
+                        core.skipToNextSong()
+                        true
                     }
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
                 cleanup()
+                core.skipToNextSong()
             }
         }
-
-        startLyricUpdate()
     }
 
     private fun startLyricUpdate() {
         handler = Handler(Looper.getMainLooper())
-        val frameDuration = 1000L / 60 // ~16.67ms for 60 FPS
         updateLyricTask = object : Runnable {
             override fun run() {
-                core.getLyricManager().updateLyrics(getCurrentPlaybackTime())
-                handler?.postDelayed(this, frameDuration)
+                val currentTime = getCurrentPlaybackTime()
+
+                // Update lyrics only when needed (based on time interval)
+                if (currentTime >= lastLyricUpdateTime + lyricUpdateInterval) {
+                    core.getLyricManager().updateLyrics(currentTime)
+                    lastLyricUpdateTime = currentTime
+                }
+
+                // Update metadata less frequently
+                if (currentTime >= lastMetaUpdateTime + metaUpdateInterval) {
+                    updateSongMeta(currentTime)
+                    lastMetaUpdateTime = currentTime
+                }
+
+                handler?.post(this)
             }
         }
         updateLyricTask?.let { handler?.post(it) }
+    }
+
+    private fun updateSongMeta(currentTime: Double) {
+        if (currentSong != null) {
+            val totalTime = getTotalTime()
+            val currentTimeFormatted = formatTime(currentTime)
+            val totalTimeFormatted = formatTime(totalTime)
+            core.getSongQueueManager().setSongMetaText(
+                "Đang phát: ${currentSong!!.title} ($currentTimeFormatted/$totalTimeFormatted)"
+            )
+        }
+    }
+
+    private fun formatTime(seconds: Double): String {
+        val millis = (seconds * 1000).toLong()
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(millis)
+        val remainingSeconds = TimeUnit.MILLISECONDS.toSeconds(millis) -
+                TimeUnit.MINUTES.toSeconds(minutes)
+        return String.format("%02d:%02d", minutes, remainingSeconds)
     }
 
     private fun stopLyricUpdate() {
@@ -78,6 +124,7 @@ class KaraokeMediaProcessor : KaraokePlayerProcessor() {
             if (it.isPlaying) {
                 it.pause()
                 isPaused = true
+                stopLyricUpdate()
             }
         }
     }
@@ -87,6 +134,7 @@ class KaraokeMediaProcessor : KaraokePlayerProcessor() {
             if (!it.isPlaying && isPaused) {
                 it.start()
                 isPaused = false
+                startLyricUpdate()
             }
         }
     }
@@ -99,8 +147,10 @@ class KaraokeMediaProcessor : KaraokePlayerProcessor() {
                 isPaused = false
             }
         }
-
         stopLyricUpdate()
+        if (interrupted) {
+            cleanup()
+        }
     }
 
     override fun getSpeed(): Double = playbackSpeed
@@ -128,6 +178,7 @@ class KaraokeMediaProcessor : KaraokePlayerProcessor() {
         currentSong = null
         isPaused = false
         isStopped = true
+        stopLyricUpdate()
     }
 
     override fun isRunning(): Boolean {

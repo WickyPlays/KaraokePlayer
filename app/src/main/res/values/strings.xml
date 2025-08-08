@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">KaraokePlayer</string>
+
+    <string name="pitch_detector_title">Pitch Detector</string>
+    <string name="pitch_detector_start">Start</string>
+    <string name="pitch_detector_stop">Stop</string>
+    <string name="pitch_detector_current_note">Current note: %1$s (%2$d Hz)</string>
+    <string name="pitch_detector_last_note">Last note: %1$s (%2$d Hz)</string>
+    <string name="pitch_detector_no_note">No note detected</string>
+    <string name="pitch_detector_na">N/A</string>
+    <string name="pitch_detector_octave">Octave: %1$s</string>
+    <string name="pitch_detector_volume">Volume: %1$d%%</string>
+    <string name="pitch_detector_instructions_start">Click Start to begin pitch detection</string>
+    <string name="pitch_detector_instructions_permission">You\'ll need to grant microphone permission</string>
+    <string name="pitch_detector_error_microphone">Microphone access denied</string>
+    <string name="pitch_detector_detune_sharp">%1$d cents sharp</string>
+    <string name="pitch_detector_detune_flat">%1$d cents flat</string>
 </resources>

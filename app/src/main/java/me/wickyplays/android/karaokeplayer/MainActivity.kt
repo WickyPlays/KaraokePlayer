@@ -9,31 +9,42 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import me.wickyplays.android.karaokeplayer.activities.HomeActivity
-import me.wickyplays.android.karaokeplayer.player.KaraokePlayerCore
+import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
+        init {
+         System.loadLibrary("native_lib")
+      }
+
         private const val STORAGE_PERMISSION_REQUEST_CODE = 100
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContentView(R.layout.activity_main)
         checkStoragePermission()
     }
 
     private fun checkStoragePermission() {
-        startHomeActivity()
-//        when {
-//            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED -> {
-//                startHomeActivity()
-//            }
-//            else -> {
-//                requestStoragePermission()
-//            }
-//        }
+        try {
+            val tempSoundfontPath: String? = copyAssetToTempFile("general_user.sf2")
+            fluidsynthHelloWorld(tempSoundfontPath!!)
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
+
+        when {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED -> {
+                startHomeActivity()
+            }
+            else -> {
+                requestStoragePermission()
+            }
+        }
     }
 
     private fun requestStoragePermission() {
@@ -58,4 +69,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    @Throws(IOException::class)
+    private fun copyAssetToTempFile(fileName: String): String {
+        getAssets().open(fileName).use { `is` ->
+            val tempFileName = "tmp_" + fileName
+            openFileOutput(tempFileName, MODE_PRIVATE).use { fos ->
+                var bytes_read: Int
+                val buffer = ByteArray(4096)
+                while ((`is`.read(buffer).also { bytes_read = it }) != -1) {
+                    fos.write(buffer, 0, bytes_read)
+                }
+            }
+            return getFilesDir().toString() + "/" + tempFileName
+        }
+    }
+
+    external fun fluidsynthHelloWorld(soundfontPath: String)
 }

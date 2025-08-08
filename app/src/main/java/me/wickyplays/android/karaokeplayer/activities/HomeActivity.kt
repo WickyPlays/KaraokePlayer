@@ -33,7 +33,11 @@ class HomeActivity : AppCompatActivity() {
             finish()
         }),
         ButtonAction("Chỉnh sửa karaoke", {}),
-        ButtonAction("Phát hiện cao độ", {}),
+        ButtonAction("Phát hiện cao độ", {
+            val intent = Intent(this, PitchDetectorActivity::class.java)
+            startActivity(intent)
+            finish()
+        }),
         ButtonAction("Cài đặt", {}),
         ButtonAction("Thoát") { finishAffinity() }
     )

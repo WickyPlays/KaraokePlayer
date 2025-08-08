@@ -1,6 +1,7 @@
 package me.wickyplays.android.karaokeplayer.player.manager
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import com.google.gson.Gson
 import me.wickyplays.android.karaokeplayer.activities.PlayerActivity
@@ -85,6 +86,27 @@ class PlayerDirectoryManager(context: Context) {
             "se" to File(templateDir, "se").apply { createDirectory(this) },
             "soundfonts" to File(templateDir, "soundfonts").apply { createDirectory(this) }
         )
+    }
+
+    fun getBackgroundFromBgDir(): Uri? {
+        val bgDir = getBackgroundsDir()
+        if (!bgDir.exists() || !bgDir.isDirectory) return null
+
+        val supportedExtensions = listOf(
+            // Image formats
+            "jpg", "jpeg", "png", "gif", "bmp", "webp",
+            // Video formats
+            "mp4", "mkv", "webm", "avi", "mov", "3gp", "mpeg", "mpg"
+        )
+
+        val firstBgFile = bgDir.listFiles()
+            ?.filter { it.isFile }
+            ?.firstOrNull { file ->
+                val extension = file.extension.lowercase()
+                extension in supportedExtensions
+            }
+
+        return firstBgFile?.let { Uri.fromFile(it) }
     }
 
     fun getBackgroundsDir(): File = defaultBgDir

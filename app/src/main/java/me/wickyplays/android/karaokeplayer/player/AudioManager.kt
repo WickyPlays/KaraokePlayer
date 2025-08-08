@@ -35,10 +35,10 @@ class AudioManager private constructor(context: Context) {
     }
 
     fun playSoundEffect(soundResId: Int) {
-        soundEffectPlayer?.release() // Release previous player if exists
+        soundEffectPlayer?.release()
         soundEffectPlayer = MediaPlayer.create(appContext, soundResId).apply {
             setOnCompletionListener {
-                release() // Release after playback completes
+                release()
                 soundEffectPlayer = null
             }
             start()

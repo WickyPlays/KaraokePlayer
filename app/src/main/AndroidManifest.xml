@@ -36,6 +36,10 @@
             android:name=".activities.PlayerActivity"
             android:screenOrientation="landscape"
             android:configChanges="keyboardHidden|orientation|screenSize"/>
+        <activity android:name=".activities.PitchDetectorActivity"
+            android:screenOrientation="landscape"
+            android:configChanges="keyboardHidden|orientation|screenSize"/>
+
     </application>
 
 </manifest>
