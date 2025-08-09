@@ -9,6 +9,7 @@ import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.KeyEvent
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
@@ -38,7 +39,8 @@ class PitchDetectorActivity : AppCompatActivity() {
     private var isListening = false
     private var bufferSize = 0
     private val sampleRate = 44100
-    private val noteStrings = arrayOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+    private val noteStrings =
+        arrayOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
     private var currentNote: NoteData? = null
     private var lastNote: NoteData? = null
     private var volumePercent = 0
@@ -77,7 +79,8 @@ class PitchDetectorActivity : AppCompatActivity() {
 
         btnStart.setOnClickListener {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
+                != PackageManager.PERMISSION_GRANTED
+            ) {
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.RECORD_AUDIO),
@@ -277,18 +280,22 @@ class PitchDetectorActivity : AppCompatActivity() {
             ) + detuneText
 
             currentNoteText.setTextColor(
-                ContextCompat.getColor(this,
+                ContextCompat.getColor(
+                    this,
                     if (note.detuneAmount > 0) R.color.blue else
-                        if (note.detuneAmount < 0) R.color.red else android.R.color.black)
+                        if (note.detuneAmount < 0) R.color.red else android.R.color.black
+                )
             )
 
             noteText.text = note.noteText
-            octaveText.text = getString(R.string.pitch_detector_octave, (note.noteNumber / 12).toString())
+            octaveText.text =
+                getString(R.string.pitch_detector_octave, (note.noteNumber / 12).toString())
         } ?: run {
             currentNoteText.text = getString(R.string.pitch_detector_no_note)
             currentNoteText.setTextColor(ContextCompat.getColor(this, android.R.color.black))
             noteText.text = getString(R.string.pitch_detector_na)
-            octaveText.text = getString(R.string.pitch_detector_octave, getString(R.string.pitch_detector_na))
+            octaveText.text =
+                getString(R.string.pitch_detector_octave, getString(R.string.pitch_detector_na))
         }
 
         lastNote?.let { note ->
@@ -310,7 +317,8 @@ class PitchDetectorActivity : AppCompatActivity() {
         btnStart.isEnabled = !isListening
         btnStop.isEnabled = isListening
         displayLayout.visibility = if (isListening || lastNote != null) View.VISIBLE else View.GONE
-        instructionsLayout.visibility = if (isListening || lastNote != null) View.GONE else View.VISIBLE
+        instructionsLayout.visibility =
+            if (isListening || lastNote != null) View.GONE else View.VISIBLE
     }
 
     private fun showError(message: String) {
@@ -337,6 +345,34 @@ class PitchDetectorActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         stopDetection()
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        when (keyCode) {
+            KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                toggleDetection()
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    private fun toggleDetection() {
+        if (isListening) {
+            stopDetection()
+        } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED
+            ) {
+                startDetection()
+            } else {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.RECORD_AUDIO),
+                    audioPermissionCode
+                )
+            }
+        }
     }
 
     data class NoteData(

@@ -109,7 +109,6 @@ class KaraokePlayerCore private constructor() {
     fun handleKeyDown(keyCode: Int): Boolean {
         Log.d("Player", "Key code pressed: $keyCode")
 
-        // Cancel any pending hide operation when a key is pressed
         selectorHideRunnable?.let {
             selectorHandler.removeCallbacks(it)
             selectorHideRunnable = null
@@ -126,11 +125,8 @@ class KaraokePlayerCore private constructor() {
             foundSong = getSongFromNumber(songNumber)
             updatePlayerSongSelector()
 
-            // Schedule hiding the selector after delay
-            scheduleSelectorHide()
             return true
         } else if (keyCode in KeyEvent.KEYCODE_NUMPAD_0..KeyEvent.KEYCODE_NUMPAD_9) {
-            setSongSelectorVisible(true)
             val digit = (keyCode - KeyEvent.KEYCODE_NUMPAD_0).toString()
             System.arraycopy(digits, 1, digits, 0, digits.size - 1)
             digits[digits.size - 1] = digit[0]
@@ -140,8 +136,6 @@ class KaraokePlayerCore private constructor() {
             foundSong = getSongFromNumber(songNumber)
             updatePlayerSongSelector()
 
-            // Schedule hiding the selector after delay
-            scheduleSelectorHide()
             return true
         } else if (keyCode == KeyEvent.KEYCODE_ENTER ||
             keyCode == KeyEvent.KEYCODE_MEDIA_PLAY ||
@@ -177,18 +171,6 @@ class KaraokePlayerCore private constructor() {
         return false
     }
 
-    private fun scheduleSelectorHide() {
-        selectorHideRunnable?.let { selectorHandler.removeCallbacks(it) }
-        selectorHideRunnable = Runnable {
-            if (karaokeProcessor?.isRunning() == true) {
-                setSongSelectorVisible(false)
-            }
-        }
-        selectorHideRunnable?.let {
-            selectorHandler.postDelayed(it, selectorHideDelay)
-        }
-    }
-
     private fun startFpsCounter() {
         val fpsView = binding.playerFpsView
         val handler = Handler(Looper.getMainLooper())
@@ -217,13 +199,9 @@ class KaraokePlayerCore private constructor() {
         scoreManager.setScoreVisible(true)
         scoreManager.setScoreText(score)
 
-        // Cancel any existing score hide operation
         scoreHideRunnable?.let { selectorHandler.removeCallbacks(it) }
-
-        // Schedule hiding the score after 10 seconds
         scoreHideRunnable = Runnable {
             scoreManager.setScoreVisible(false)
-            // Proceed to next song if available
             skipToNextSong()
         }
         scoreHideRunnable?.let {

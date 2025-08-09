@@ -18,6 +18,12 @@
     <string name="player_score_good_job">Good job!</string>
     <string name="player_score_perfect_score">Perfect score</string>
 
+    <string name="settings_title">Settings</string>
+    <string name="settings_general">General</string>
+    <string name="settings_lyrics">Lyrics</string>
+    <string name="lyrics_outlined_color">Outlined Color</string>
+    <string name="lyrics_filled_color">Filled Color</string>
+
     <string name="pitch_detector_title">Pitch Detector</string>
     <string name="pitch_detector_start">Start</string>
     <string name="pitch_detector_stop">Stop</string>

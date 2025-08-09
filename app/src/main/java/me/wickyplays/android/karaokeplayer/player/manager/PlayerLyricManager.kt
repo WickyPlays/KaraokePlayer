@@ -376,9 +376,9 @@ class PlayerLyricManager(
     }
 
     fun clearLyricViews() {
-        binding.playerLyrics.lyricTop.text = ""
-        binding.playerLyrics.lyricBottom.text = ""
-        binding.playerLyrics.lyricCountdown.text = ""
+        setLyricTopView(null)
+        setLyricBottomView(null)
+        setCountdownTime(0.0)
         binding.playerLyrics.lyricTitleContainer.visibility = View.GONE
         binding.playerLyrics.cooldownContainer.visibility = View.GONE
     }

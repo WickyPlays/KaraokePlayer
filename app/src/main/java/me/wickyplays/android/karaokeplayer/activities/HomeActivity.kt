@@ -48,9 +48,11 @@ class HomeActivity : AppCompatActivity() {
             ButtonAction(getString(R.string.home_pitch_detection), {
                 val intent = Intent(this, PitchDetectorActivity::class.java)
                 startActivity(intent)
-                finish()
             }),
-            ButtonAction(getString(R.string.home_settings), {}),
+            ButtonAction(getString(R.string.home_settings), {
+                val intent = Intent(this, SettingsActivity::class.java)
+                startActivity(intent)
+            }),
             ButtonAction(getString(R.string.home_exit)) { finishAffinity() }
         )
 

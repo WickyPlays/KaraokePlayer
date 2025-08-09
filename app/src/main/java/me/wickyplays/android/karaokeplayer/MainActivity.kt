@@ -3,12 +3,17 @@ package me.wickyplays.android.karaokeplayer
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import me.wickyplays.android.karaokeplayer.activities.HomeActivity
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
@@ -18,42 +23,60 @@ class MainActivity : AppCompatActivity() {
             System.loadLibrary("native_lib")
         }
 
-        private const val PERMISSION_REQUEST_CODE = 100
-        private val REQUIRED_PERMISSIONS = arrayOf(
+        private val REQUIRED_PERMISSIONS = mutableListOf(
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.RECORD_AUDIO
-        )
+        ).apply {
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        }.toTypedArray()
+    }
+
+    // New permission request launcher
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.all { it.value }
+        if (allGranted) {
+            initializeSynthAndStartHome()
+        } else {
+            finish()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         setContentView(R.layout.activity_main)
-        checkPermissions()
-    }
 
-    private fun checkPermissions() {
-        try {
-            val tempSoundfontPath: String? = copyAssetToTempFile("general_user.sf2")
-            fluidsynthHelloWorld(tempSoundfontPath!!)
-        } catch (e: IOException) {
-            throw RuntimeException(e)
-        }
-
-        val missingPermissions = REQUIRED_PERMISSIONS.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-
-        if (missingPermissions.isEmpty()) {
-            startHomeActivity()
+        // Check and request permissions
+        if (hasAllPermissions()) {
+            initializeSynthAndStartHome()
         } else {
-            requestPermissions(missingPermissions.toTypedArray())
+            requestPermissionLauncher.launch(REQUIRED_PERMISSIONS)
         }
     }
 
-    private fun requestPermissions(permissions: Array<String>) {
-        ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE)
+    private fun hasAllPermissions(): Boolean {
+        return REQUIRED_PERMISSIONS.all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun initializeSynthAndStartHome() {
+        try {
+            // Use app-specific storage for the soundfont
+            val soundfontFile = File(filesDir, "general_user.sf2")
+            if (!soundfontFile.exists()) {
+                copyAssetToFile("general_user.sf2", soundfontFile)
+            }
+            fluidsynthHelloWorld(soundfontFile.absolutePath)
+            startHomeActivity()
+        } catch (e: IOException) {
+            e.printStackTrace()
+            finish()
+        }
     }
 
     private fun startHomeActivity() {
@@ -62,32 +85,12 @@ class MainActivity : AppCompatActivity() {
         finish()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            PERMISSION_REQUEST_CODE -> {
-                val allGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-                if (allGranted) {
-                    startHomeActivity()
-                } else {
-                    finish()
-                }
-            }
-        }
-    }
-
     @Throws(IOException::class)
-    private fun copyAssetToTempFile(fileName: String): String {
-        getAssets().open(fileName).use { `is` ->
-            val tempFileName = "tmp_" + fileName
-            openFileOutput(tempFileName, MODE_PRIVATE).use { fos ->
-                var bytes_read: Int
-                val buffer = ByteArray(4096)
-                while ((`is`.read(buffer).also { bytes_read = it }) != -1) {
-                    fos.write(buffer, 0, bytes_read)
-                }
+    private fun copyAssetToFile(assetName: String, destinationFile: File) {
+        assets.open(assetName).use { input ->
+            FileOutputStream(destinationFile).use { output ->
+                input.copyTo(output)
             }
-            return getFilesDir().toString() + "/" + tempFileName
         }
     }
 

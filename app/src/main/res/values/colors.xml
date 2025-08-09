@@ -4,4 +4,9 @@
     <color name="white">#FFFFFFFF</color>
     <color name="blue">#1976D2</color>
     <color name="red">#D32F2F</color>
+
+    <color name="dark_background">#121212</color>
+    <color name="dark_card_background">#1e1e1e</color>
+    <color name="dark_header">#121212</color>
+    <color name="white_70">#B3FFFFFF</color>
 </resources>
