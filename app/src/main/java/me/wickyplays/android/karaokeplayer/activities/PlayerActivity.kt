@@ -1,6 +1,7 @@
 package me.wickyplays.android.karaokeplayer.activities
 
 import android.content.pm.ActivityInfo
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -23,6 +24,14 @@ class PlayerActivity : AppCompatActivity() {
 
         core.initialize(this, binding)
         setContentView(binding.root)
+
+//        Blurry.with(this)
+//            .radius(10)
+//            .sampling(8)
+//            .color(Color.argb(66, 255, 255, 0))
+//            .async()
+//            .onto(binding.playerScore.root);
+
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -35,7 +44,8 @@ class PlayerActivity : AppCompatActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 window.insetsController?.let { controller ->
                     controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-                    controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    controller.systemBarsBehavior =
+                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 }
                 WindowInsets.Type.displayCutout()
             } else {

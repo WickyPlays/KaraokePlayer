@@ -1,5 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">KaraokePlayer</string>
+
+    <string name="home_play_karaoke">Play karaoke</string>
+    <string name="home_edit_karaoke">Edit karaoke</string>
+    <string name="home_pitch_detection">Pitch Detector</string>
+    <string name="home_settings">Settings</string>
+    <string name="home_exit">Exit</string>
+    <string name="home_fps">FPS: %1$d</string>
+
+    <string name="player_score_title">Your score is</string>
+    <string name="player_score_default_comment">Your voice cannot be heard!</string>
+    <string name="player_score_default_value">0</string>
+    <string name="player_score_your_voice_cannot_be_heard">Your voice cannot be heard</string>
+    <string name="player_score_you_need_to_practice_more">You need to practice more</string>
+    <string name="player_score_not_bad">Not bad!</string>
+    <string name="player_score_good_job">Good job!</string>
+    <string name="player_score_perfect_score">Perfect score</string>
 
     <string name="pitch_detector_title">Pitch Detector</string>
     <string name="pitch_detector_start">Start</string>

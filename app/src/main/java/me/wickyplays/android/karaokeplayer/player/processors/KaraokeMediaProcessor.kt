@@ -52,8 +52,9 @@ class KaraokeMediaProcessor : KaraokePlayerProcessor() {
                         startLyricUpdate()
                     }
                     setOnCompletionListener {
-                        stop(true)
-                        core.skipToNextSong()
+                        stop(false)
+                        core.getScoreManager().setScoreVisible(true)
+                        core.showScore(core.getJudgementManager().score)
                     }
                     setOnErrorListener { mp, what, extra ->
                         Log.e("MediaPlayer", "Error occurred: what=$what, extra=$extra")
@@ -79,6 +80,7 @@ class KaraokeMediaProcessor : KaraokePlayerProcessor() {
                 // Update lyrics only when needed (based on time interval)
                 if (currentTime >= lastLyricUpdateTime + lyricUpdateInterval) {
                     core.getLyricManager().updateLyrics(currentTime)
+                    core.getJudgementManager().updateJudgement(currentTime)
                     lastLyricUpdateTime = currentTime
                 }
 

@@ -15,10 +15,14 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         init {
-         System.loadLibrary("native_lib")
-      }
+            System.loadLibrary("native_lib")
+        }
 
-        private const val STORAGE_PERMISSION_REQUEST_CODE = 100
+        private const val PERMISSION_REQUEST_CODE = 100
+        private val REQUIRED_PERMISSIONS = arrayOf(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.RECORD_AUDIO
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,10 +30,10 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
 
         setContentView(R.layout.activity_main)
-        checkStoragePermission()
+        checkPermissions()
     }
 
-    private fun checkStoragePermission() {
+    private fun checkPermissions() {
         try {
             val tempSoundfontPath: String? = copyAssetToTempFile("general_user.sf2")
             fluidsynthHelloWorld(tempSoundfontPath!!)
@@ -37,18 +41,19 @@ class MainActivity : AppCompatActivity() {
             throw RuntimeException(e)
         }
 
-        when {
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED -> {
-                startHomeActivity()
-            }
-            else -> {
-                requestStoragePermission()
-            }
+        val missingPermissions = REQUIRED_PERMISSIONS.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (missingPermissions.isEmpty()) {
+            startHomeActivity()
+        } else {
+            requestPermissions(missingPermissions.toTypedArray())
         }
     }
 
-    private fun requestStoragePermission() {
-        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), STORAGE_PERMISSION_REQUEST_CODE)
+    private fun requestPermissions(permissions: Array<String>) {
+        ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE)
     }
 
     private fun startHomeActivity() {
@@ -60,8 +65,9 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
-            STORAGE_PERMISSION_REQUEST_CODE -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            PERMISSION_REQUEST_CODE -> {
+                val allGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+                if (allGranted) {
                     startHomeActivity()
                 } else {
                     finish()

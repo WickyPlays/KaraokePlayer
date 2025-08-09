@@ -1,5 +1,6 @@
 [versions]
 agp = "8.11.1"
+blurry = "4.0.1"
 constraintlayoutVersion = "2.1.4"
 gson = "2.13.1"
 kotlin = "2.0.21"
@@ -19,6 +20,7 @@ recyclerview = "1.4.0"
 androidx-constraintlayout-v214 = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayoutVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-percentlayout = { module = "androidx.percentlayout:percentlayout", version.ref = "percentlayout" }
+blurry = { module = "jp.wasabeef:blurry", version.ref = "blurry" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

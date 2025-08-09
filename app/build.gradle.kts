@@ -58,7 +58,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.constraintlayout.v214)
     implementation(libs.mididriver)
-    implementation("androidx.percentlayout:percentlayout:1.0.0")
+    implementation(libs.blurry)
     implementation(libs.gson)
     implementation(libs.androidx.recyclerview)
     testImplementation(libs.junit)

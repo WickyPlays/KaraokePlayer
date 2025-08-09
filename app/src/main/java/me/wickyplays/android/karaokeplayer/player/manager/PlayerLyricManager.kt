@@ -86,7 +86,11 @@ class PlayerLyricManager(
             if (it.available) {
                 it.available = false
                 when (it.type) {
-                    LyricFrameType.TITLE_SHOW -> setTitleViewVisible(true)
+                    LyricFrameType.TITLE_SHOW -> {
+                        setTitleViewVisible(true)
+                        setLyricTopView(null)
+                        setLyricBottomView(null)
+                    }
                     LyricFrameType.TITLE_HIDE -> setTitleViewVisible(false)
                     LyricFrameType.COUNTDOWN -> setCountdownTime(it.countdownFrom ?: 0.0)
                     LyricFrameType.LYRIC_TOP -> {
@@ -209,7 +213,6 @@ class PlayerLyricManager(
             ))
         }
 
-        // Countdown frames
         val countdownableGroups = groups.filterIndexed { i, group ->
             if (group.isEmpty()) return@filterIndexed false
             val prevGroup = groups.getOrNull(i - 1)
@@ -218,20 +221,11 @@ class PlayerLyricManager(
         }.map { it.first().s }
 
         countdownableGroups.forEach { startTime ->
-            // Whole number countdown (3, 2, 1)
-            (3 downTo 1).forEach { count ->
+            (3 downTo 0).forEach { count ->
                 frames.add(LyricFrame(
                     type = LyricFrameType.COUNTDOWN,
                     time = startTime - count,
                     countdownFrom = count.toDouble()
-                ))
-            }
-            // Decimal countdown (0.9, 0.8, ..., 0.0)
-            (9 downTo 0).forEach { tenth ->
-                frames.add(LyricFrame(
-                    type = LyricFrameType.COUNTDOWN,
-                    time = startTime - (tenth / 10.0),
-                    countdownFrom = tenth / 10.0
                 ))
             }
         }
@@ -254,11 +248,13 @@ class PlayerLyricManager(
         }
 
         var flipped = false
-        for (i in 2 until groups.size) {
+        var i = 2
+        while (i < groups.size) {
             val prevGroup = groups[i - 1]
             val currentGroup = groups[i]
 
             if (prevGroup.isEmpty() || currentGroup.isEmpty()) {
+                i++
                 continue
             }
 
@@ -294,20 +290,31 @@ class PlayerLyricManager(
                         time = cooldownEndTime,
                         lineIndex = i + 1
                     ))
+                    i++
                 }
                 flipped = false
             } else {
                 val transitionTime = prevGroup.first().s +
                         (prevGroup.last().e - prevGroup.first().s) / 2
 
-                frames.add(LyricFrame(
-                    type = if (!flipped) LyricFrameType.LYRIC_TOP else LyricFrameType.LYRIC_BOTTOM,
-                    time = transitionTime,
-                    lineIndex = i
-                ))
+                if (!flipped) {
+                    frames.add(LyricFrame(
+                        type = LyricFrameType.LYRIC_TOP,
+                        time = transitionTime,
+                        lineIndex = i
+                    ))
+                } else {
+                    frames.add(LyricFrame(
+                        type = LyricFrameType.LYRIC_BOTTOM,
+                        time = transitionTime,
+                        lineIndex = i
+                    ))
+                }
                 flipped = !flipped
             }
+            i++
         }
+
         return frames.sortedBy { it.time }
     }
 

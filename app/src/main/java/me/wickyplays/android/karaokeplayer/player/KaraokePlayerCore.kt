@@ -16,8 +16,10 @@ import me.wickyplays.android.karaokeplayer.R
 import me.wickyplays.android.karaokeplayer.activities.HomeActivity
 import me.wickyplays.android.karaokeplayer.databinding.ActivityPlayerBinding
 import me.wickyplays.android.karaokeplayer.player.manager.PlayerDirectoryManager
+import me.wickyplays.android.karaokeplayer.player.manager.PlayerJudgementManager
 import me.wickyplays.android.karaokeplayer.player.manager.PlayerLoadingManager
 import me.wickyplays.android.karaokeplayer.player.manager.PlayerLyricManager
+import me.wickyplays.android.karaokeplayer.player.manager.PlayerScoreManager
 import me.wickyplays.android.karaokeplayer.player.manager.PlayerSongQueueManager
 import me.wickyplays.android.karaokeplayer.player.obj.Song
 import me.wickyplays.android.karaokeplayer.player.processors.KaraokeMediaProcessor
@@ -34,14 +36,17 @@ class KaraokePlayerCore private constructor() {
     private val loadingDelay = 1000L // 1 second delay
     private var karaokeProcessor: KaraokeMediaProcessor? = null
     private val selectorHideDelay = 5000L // 5 seconds delay
+    private val scoreDisplayDelay = 10000L // 10 seconds delay
     private val selectorHandler = Handler(Looper.getMainLooper())
     private var selectorHideRunnable: Runnable? = null
+    private var scoreHideRunnable: Runnable? = null
 
     private lateinit var songQueueManager: PlayerSongQueueManager
-
     private lateinit var loadingManager: PlayerLoadingManager
     private lateinit var lyricManager: PlayerLyricManager
     private lateinit var directoryManager: PlayerDirectoryManager
+    private lateinit var scoreManager: PlayerScoreManager
+    private lateinit var judgementManager: PlayerJudgementManager
 
     companion object {
         val instance: KaraokePlayerCore by lazy {
@@ -60,6 +65,8 @@ class KaraokePlayerCore private constructor() {
         lyricManager = PlayerLyricManager(context, binding)
         directoryManager = PlayerDirectoryManager(context)
         songQueueManager = PlayerSongQueueManager(binding)
+        scoreManager = PlayerScoreManager(binding)
+        judgementManager = PlayerJudgementManager(binding)
 
         setupBackgroundVideo()
         setupSongSelector()
@@ -85,7 +92,7 @@ class KaraokePlayerCore private constructor() {
             binding.videoView.start()
         }
         binding.videoView.setOnErrorListener { mp, what, extra ->
-            android.util.Log.e("VideoView", "Error occurred: what=$what, extra=$extra")
+            Log.e("VideoView", "Error occurred: what=$what, extra=$extra")
             true
         }
     }
@@ -136,17 +143,13 @@ class KaraokePlayerCore private constructor() {
             keyCode == KeyEvent.KEYCODE_MEDIA_PLAY ||
             keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
             foundSong?.let {
-                android.util.Log.d("Player", "Selected song: ${it.number} - ${it.title}")
+                Log.d("Player", "Selected song: ${it.number} - ${it.title}")
                 addSongToQueue(it)
+                setSongSelectorVisible(false)
             }
-            digits.fill('0')
             updateNumberDisplay()
             updatePlayerQueueBar()
 
-            // If song is now playing, hide the selector
-            if (karaokeProcessor?.isRunning() == true) {
-                setSongSelectorVisible(false)
-            }
             return true
         } else if (keyCode == KeyEvent.KEYCODE_N || keyCode == KeyEvent.KEYCODE_MEDIA_NEXT) {
             skipToNextSong()
@@ -196,6 +199,24 @@ class KaraokePlayerCore private constructor() {
             }
         }
         handler.post(updateFps)
+    }
+
+    fun showScore(score: Int) {
+        scoreManager.setScoreVisible(true)
+        scoreManager.setScoreText(score)
+
+        // Cancel any existing score hide operation
+        scoreHideRunnable?.let { selectorHandler.removeCallbacks(it) }
+
+        // Schedule hiding the score after 10 seconds
+        scoreHideRunnable = Runnable {
+            scoreManager.setScoreVisible(false)
+            // Proceed to next song if available
+            skipToNextSong()
+        }
+        scoreHideRunnable?.let {
+            selectorHandler.postDelayed(it, scoreDisplayDelay)
+        }
     }
 
     fun skipToNextSong() {
@@ -320,6 +341,14 @@ class KaraokePlayerCore private constructor() {
         return songQueueManager
     }
 
+    fun getScoreManager(): PlayerScoreManager {
+        return scoreManager
+    }
+
+    fun getJudgementManager(): PlayerJudgementManager {
+        return judgementManager
+    }
+
     fun setSongSelectorVisible(visible: Boolean) {
         // Always show selector if no song is playing
         val shouldShow = visible || karaokeProcessor?.isRunning() != true
@@ -337,10 +366,17 @@ class KaraokePlayerCore private constructor() {
     fun cleanup() {
         karaokeProcessor?.stop(true)
         lyricManager.clearLyricViews()
+        scoreManager.setScoreVisible(false)
         currentSong = null
         queueSongList.clear()
         songList.clear()
         foundSong = null
+
+        // Cancel any pending score hide operation
+        scoreHideRunnable?.let {
+            selectorHandler.removeCallbacks(it)
+            scoreHideRunnable = null
+        }
 
         // Show selector after cleanup
         setSongSelectorVisible(true)

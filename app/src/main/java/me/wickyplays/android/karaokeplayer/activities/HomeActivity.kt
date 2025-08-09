@@ -26,21 +26,8 @@ import me.wickyplays.android.karaokeplayer.player.AudioManager
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
     private var selectedIndex = 0
-    private val buttonActions = listOf(
-        ButtonAction("Phát karaoke", {
-            val intent = Intent(this, PlayerActivity::class.java)
-            startActivity(intent)
-            finish()
-        }),
-        ButtonAction("Chỉnh sửa karaoke", {}),
-        ButtonAction("Phát hiện cao độ", {
-            val intent = Intent(this, PitchDetectorActivity::class.java)
-            startActivity(intent)
-            finish()
-        }),
-        ButtonAction("Cài đặt", {}),
-        ButtonAction("Thoát") { finishAffinity() }
-    )
+
+    private var buttonActions = emptyList<ButtonAction>()
     private val selectedColor = "#4A4A4A".toColorInt()
     private val unselectedColor = Color.BLACK
     private val textColor = Color.WHITE
@@ -51,6 +38,22 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        buttonActions = listOf(
+            ButtonAction(getString(R.string.home_play_karaoke), {
+                val intent = Intent(this, PlayerActivity::class.java)
+                startActivity(intent)
+                finish()
+            }),
+            ButtonAction(getString(R.string.home_edit_karaoke), {}),
+            ButtonAction(getString(R.string.home_pitch_detection), {
+                val intent = Intent(this, PitchDetectorActivity::class.java)
+                startActivity(intent)
+                finish()
+            }),
+            ButtonAction(getString(R.string.home_settings), {}),
+            ButtonAction(getString(R.string.home_exit)) { finishAffinity() }
+        )
+
         binding = ActivityHomeBinding.inflate(layoutInflater)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         setContentView(binding.root)
