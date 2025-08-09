@@ -8,7 +8,7 @@ abstract class KaraokePlayerProcessor {
     abstract fun start()
     abstract fun pause()
     abstract fun resume()
-    abstract fun stop(interrupted: Boolean)
+    abstract fun stop()
 
     abstract fun getSpeed(): Double
     abstract fun setSpeed(speed: Double)

@@ -52,21 +52,20 @@ class KaraokeMediaProcessor : KaraokePlayerProcessor() {
                         startLyricUpdate()
                     }
                     setOnCompletionListener {
-                        stop(false)
-                        core.getScoreManager().setScoreVisible(true)
-                        core.showScore(core.getJudgementManager().score)
+                        stop()
+                        core.onSongCompleted()
                     }
                     setOnErrorListener { mp, what, extra ->
                         Log.e("MediaPlayer", "Error occurred: what=$what, extra=$extra")
-                        stop(true)
-                        core.skipToNextSong()
+                        stop()
+                        core.onSongError()
                         true
                     }
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
                 cleanup()
-                core.skipToNextSong()
+                core.onSongError()
             }
         }
     }
@@ -141,20 +140,13 @@ class KaraokeMediaProcessor : KaraokePlayerProcessor() {
         }
     }
 
-    override fun stop(interrupted: Boolean) {
+    override fun stop() {
         mediaPlayer?.let {
             if (it.isPlaying || isPaused) {
                 it.stop()
-                isStopped = true
-                isPaused = false
             }
         }
-        stopLyricUpdate()
-        core.getLyricManager().clearLyricViews()
-
-        if (interrupted) {
-            cleanup()
-        }
+        cleanup()
     }
 
     override fun getSpeed(): Double = playbackSpeed

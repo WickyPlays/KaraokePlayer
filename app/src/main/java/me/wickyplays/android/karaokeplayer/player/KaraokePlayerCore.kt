@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -38,11 +37,9 @@ class KaraokePlayerCore private constructor() {
     private var foundSong: Song? = null
     private val loadingDelay = 1000L
     private var karaokeProcessor: KaraokeMediaProcessor? = null
-    private val selectorHideDelay = 5000L
     private val scoreDisplayDelay = 10000L
-    private val selectorHandler = Handler(Looper.getMainLooper())
-    private var selectorHideRunnable: Runnable? = null
     private var scoreHideRunnable: Runnable? = null
+    private var songSelectorHideRunnable: Runnable? = null
 
     private lateinit var songQueueManager: PlayerSongQueueManager
     private lateinit var loadingManager: PlayerLoadingManager
@@ -82,6 +79,7 @@ class KaraokePlayerCore private constructor() {
 
         Handler(Looper.getMainLooper()).postDelayed({
             loadingManager.setLoadingState(false)
+            updateSongSelectorVisibility()
         }, loadingDelay)
     }
 
@@ -103,19 +101,14 @@ class KaraokePlayerCore private constructor() {
 
     private fun setupSongSelector() {
         updateNumberDisplay()
-        setSongSelectorVisible(true)
+        showSongSelectorVisible(true)
     }
 
     fun handleKeyDown(keyCode: Int): Boolean {
         Log.d("Player", "Key code pressed: $keyCode")
 
-        selectorHideRunnable?.let {
-            selectorHandler.removeCallbacks(it)
-            selectorHideRunnable = null
-        }
-
         if (keyCode in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9) {
-            setSongSelectorVisible(true)
+            showSongSelectorVisible(true)
             val digit = (keyCode - KeyEvent.KEYCODE_0).toString()
             System.arraycopy(digits, 1, digits, 0, digits.size - 1)
             digits[digits.size - 1] = digit[0]
@@ -125,8 +118,17 @@ class KaraokePlayerCore private constructor() {
             foundSong = getSongFromNumber(songNumber)
             updatePlayerSongSelector()
 
+            songSelectorHideRunnable?.let { Handler(Looper.getMainLooper()).removeCallbacks(it) }
+            if (karaokeProcessor?.isRunning() == true) {
+                songSelectorHideRunnable = Runnable { showSongSelectorVisible(false) }
+                Handler(Looper.getMainLooper()).postDelayed(songSelectorHideRunnable!!, 5000L)
+            } else {
+                songSelectorHideRunnable = null
+            }
+
             return true
         } else if (keyCode in KeyEvent.KEYCODE_NUMPAD_0..KeyEvent.KEYCODE_NUMPAD_9) {
+            showSongSelectorVisible(true)
             val digit = (keyCode - KeyEvent.KEYCODE_NUMPAD_0).toString()
             System.arraycopy(digits, 1, digits, 0, digits.size - 1)
             digits[digits.size - 1] = digit[0]
@@ -136,6 +138,14 @@ class KaraokePlayerCore private constructor() {
             foundSong = getSongFromNumber(songNumber)
             updatePlayerSongSelector()
 
+            songSelectorHideRunnable?.let { Handler(Looper.getMainLooper()).removeCallbacks(it) }
+            if (karaokeProcessor?.isRunning() == true) {
+                songSelectorHideRunnable = Runnable { showSongSelectorVisible(false) }
+                Handler(Looper.getMainLooper()).postDelayed(songSelectorHideRunnable!!, 5000L)
+            } else {
+                songSelectorHideRunnable = null
+            }
+
             return true
         } else if (keyCode == KeyEvent.KEYCODE_ENTER ||
             keyCode == KeyEvent.KEYCODE_MEDIA_PLAY ||
@@ -144,10 +154,16 @@ class KaraokePlayerCore private constructor() {
             foundSong?.let {
                 Log.d("Player", "Selected song: ${it.number} - ${it.title}")
                 addSongToQueue(it)
-                setSongSelectorVisible(false)
+                digits.fill('0')
+                foundSong = null
+                updateNumberDisplay()
+                updatePlayerSongSelector()
+                showSongSelectorVisible(false)
             }
-            updateNumberDisplay()
             updatePlayerQueueBar()
+
+            songSelectorHideRunnable?.let { Handler(Looper.getMainLooper()).removeCallbacks(it) }
+            songSelectorHideRunnable = null
 
             return true
         } else if (keyCode == KeyEvent.KEYCODE_N || keyCode == KeyEvent.KEYCODE_MEDIA_NEXT) {
@@ -195,22 +211,34 @@ class KaraokePlayerCore private constructor() {
         handler.post(updateFps)
     }
 
+    fun onSongCompleted() {
+        showScore(getJudgementManager().score)
+    }
+
+    fun onSongError() {
+        skipToNextSong()
+    }
+
     fun showScore(score: Int) {
         scoreManager.setScoreVisible(true)
         scoreManager.setScoreText(score)
 
-        scoreHideRunnable?.let { selectorHandler.removeCallbacks(it) }
+        scoreHideRunnable?.let { Handler(Looper.getMainLooper()).removeCallbacks(it) }
         scoreHideRunnable = Runnable {
             scoreManager.setScoreVisible(false)
             skipToNextSong()
         }
         scoreHideRunnable?.let {
-            selectorHandler.postDelayed(it, scoreDisplayDelay)
+            Handler(Looper.getMainLooper()).postDelayed(it, scoreDisplayDelay)
         }
     }
 
+    fun showSongSelectorVisible(visible: Boolean) {
+        binding.songSelector.root.visibility = if (visible) View.VISIBLE else View.GONE
+    }
+
     fun skipToNextSong() {
-        karaokeProcessor?.stop(true)
+        karaokeProcessor?.stop()
         lyricManager.clearLyricViews()
         currentSong = null
 
@@ -222,9 +250,7 @@ class KaraokePlayerCore private constructor() {
             updatePlayerQueueBar()
         }
 
-        if (karaokeProcessor?.isRunning() != true) {
-            setSongSelectorVisible(true)
-        }
+        updateSongSelectorVisibility()
     }
 
     private fun updateNumberDisplay() {
@@ -272,7 +298,7 @@ class KaraokePlayerCore private constructor() {
     fun playSong(song: Song?) {
         if (song == null) return
 
-        karaokeProcessor?.stop(true)
+        karaokeProcessor?.stop()
         lyricManager.clearLyricViews()
 
         currentSong = song
@@ -289,7 +315,7 @@ class KaraokePlayerCore private constructor() {
         karaokeProcessor?.processSong(currentSong!!)
         karaokeProcessor?.start()
 
-        setSongSelectorVisible(false)
+        showSongSelectorVisible(false)
     }
 
     fun addSong(song: Song) {
@@ -313,24 +339,6 @@ class KaraokePlayerCore private constructor() {
         return songList
     }
 
-    fun getQueueSongList(): List<Song> {
-        return queueSongList
-    }
-
-    fun getCurrentSong(): Song? {
-        return currentSong
-    }
-
-    fun nextSong(): Song? {
-        if (queueSongList.isEmpty()) return null
-        currentSong = queueSongList.removeAt(0)
-        return currentSong
-    }
-
-    fun getLoadingManager(): PlayerLoadingManager {
-        return loadingManager
-    }
-
     fun getLyricManager(): PlayerLyricManager {
         return lyricManager
     }
@@ -347,26 +355,13 @@ class KaraokePlayerCore private constructor() {
         return judgementManager
     }
 
-    fun setSongSelectorVisible(visible: Boolean) {
-        // Always show selector if no song is playing
-        val shouldShow = visible || karaokeProcessor?.isRunning() != true
-        binding.songSelector.root.visibility = if (shouldShow) View.VISIBLE else View.GONE
-
-        // Cancel any pending hide operation when manually setting visibility
-        if (!visible) {
-            selectorHideRunnable?.let {
-                selectorHandler.removeCallbacks(it)
-                selectorHideRunnable = null
-            }
-        }
-    }
-
-    fun emptyLyric() {
-        lyricManager.clearLyricViews()
+    private fun updateSongSelectorVisibility() {
+        val shouldBeVisible = queueSongList.isEmpty() || karaokeProcessor?.isRunning() != true
+        showSongSelectorVisible(shouldBeVisible)
     }
 
     fun cleanup() {
-        karaokeProcessor?.stop(true)
+        karaokeProcessor?.stop()
         lyricManager.clearLyricViews()
         scoreManager.setScoreVisible(false)
         judgementManager.stopPitchDetection()
@@ -375,13 +370,16 @@ class KaraokePlayerCore private constructor() {
         songList.clear()
         foundSong = null
 
-        // Cancel any pending score hide operation
         scoreHideRunnable?.let {
-            selectorHandler.removeCallbacks(it)
+            Handler(Looper.getMainLooper()).removeCallbacks(it)
             scoreHideRunnable = null
         }
 
-        // Show selector after cleanup
-        setSongSelectorVisible(true)
+        songSelectorHideRunnable?.let {
+            Handler(Looper.getMainLooper()).removeCallbacks(it)
+            songSelectorHideRunnable = null
+        }
+
+        showSongSelectorVisible(true)
     }
 }

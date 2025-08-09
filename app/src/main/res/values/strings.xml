@@ -18,6 +18,10 @@
     <string name="player_score_good_job">Good job!</string>
     <string name="player_score_perfect_score">Perfect score</string>
 
+    <string name="edit_title">Not supported</string>
+    <string name="edit_message">Please visit our website at\n\nhttps://wickykaraokeplayer.vercel.app\n\nin order to edit your own songs.</string>
+    <string name="edit_got_it_button">Got it</string>
+
     <string name="settings_title">Settings</string>
     <string name="settings_general">General</string>
     <string name="settings_lyrics">Lyrics</string>

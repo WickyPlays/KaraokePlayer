@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -14,7 +15,9 @@ import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
@@ -22,6 +25,7 @@ import androidx.core.view.children
 import me.wickyplays.android.karaokeplayer.R
 import me.wickyplays.android.karaokeplayer.databinding.ActivityHomeBinding
 import me.wickyplays.android.karaokeplayer.player.AudioManager
+import androidx.core.view.isVisible
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
@@ -44,16 +48,24 @@ class HomeActivity : AppCompatActivity() {
                 startActivity(intent)
                 finish()
             }),
-            ButtonAction(getString(R.string.home_edit_karaoke), {}),
+            ButtonAction(getString(R.string.home_edit_karaoke), {
+                showEditNotificationDialog()
+                AudioManager.getInstance(this).playSoundEffect(R.raw.click)
+            }),
             ButtonAction(getString(R.string.home_pitch_detection), {
                 val intent = Intent(this, PitchDetectorActivity::class.java)
                 startActivity(intent)
+                AudioManager.getInstance(this).playSoundEffect(R.raw.click)
             }),
             ButtonAction(getString(R.string.home_settings), {
                 val intent = Intent(this, SettingsActivity::class.java)
                 startActivity(intent)
+                AudioManager.getInstance(this).playSoundEffect(R.raw.click)
             }),
-            ButtonAction(getString(R.string.home_exit)) { finishAffinity() }
+            ButtonAction(getString(R.string.home_exit)) {
+                finishAffinity()
+                AudioManager.getInstance(this).playSoundEffect(R.raw.click)
+            }
         )
 
         binding = ActivityHomeBinding.inflate(layoutInflater)
@@ -94,7 +106,12 @@ class HomeActivity : AppCompatActivity() {
                 setOnClickListener {
                     selectedIndex = index
                     updateButtonSelection()
-                    buttonAction.action.invoke()
+                    val dialog = binding.homeEditNotification.root
+                    if (dialog.isVisible) {
+                        dialog.visibility = View.GONE
+                    } else {
+                        buttonAction.action.invoke()
+                    }
                 }
                 setOnFocusChangeListener { _, hasFocus ->
                     if (hasFocus) {
@@ -120,14 +137,23 @@ class HomeActivity : AppCompatActivity() {
                 selectPreviousButton()
                 true
             }
+
             KeyEvent.KEYCODE_DPAD_DOWN -> {
                 selectNextButton()
                 true
             }
+
             KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER -> {
-                buttonActions[selectedIndex].action.invoke()
+                val dialog = binding.homeEditNotification.root
+
+                if (dialog.isVisible) {
+                    dialog.visibility = View.GONE
+                } else {
+                    buttonActions[selectedIndex].action.invoke()
+                }
                 true
             }
+
             else -> false
         }
     }
@@ -156,6 +182,7 @@ class HomeActivity : AppCompatActivity() {
             button.backgroundTintList = ColorStateList.valueOf(
                 if (index == selectedIndex) selectedColor else unselectedColor
             )
+            AudioManager.getInstance(this).playSoundEffect(R.raw.click)
         }
     }
 
@@ -183,6 +210,22 @@ class HomeActivity : AppCompatActivity() {
         handler.post(updateFps)
     }
 
+    private fun showEditNotificationDialog() {
+        val dialog = binding.homeEditNotification.root
+        dialog.visibility = View.VISIBLE
+
+        val closeButton = binding.homeEditNotification.closeButton
+        val gotitButton = binding.homeEditNotification.gotItButton
+
+        closeButton.setOnClickListener {
+            dialog.visibility = View.GONE
+        }
+
+        gotitButton.setOnClickListener {
+            dialog.visibility = View.GONE
+        }
+    }
+
     override fun onPause() {
         super.onPause()
         binding.videoView.pause()
@@ -207,7 +250,8 @@ class HomeActivity : AppCompatActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 window.insetsController?.let { controller ->
                     controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-                    controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    controller.systemBarsBehavior =
+                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 }
                 WindowInsets.Type.displayCutout()
             } else {
