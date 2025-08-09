@@ -1,7 +1,9 @@
 package me.wickyplays.android.karaokeplayer.player
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
 import android.os.Handler
@@ -11,6 +13,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
 import me.wickyplays.android.karaokeplayer.R
 import me.wickyplays.android.karaokeplayer.activities.HomeActivity
@@ -33,10 +36,10 @@ class KaraokePlayerCore private constructor() {
     private lateinit var context: Context
     private val digits = Array(6) { '0' }
     private var foundSong: Song? = null
-    private val loadingDelay = 1000L // 1 second delay
+    private val loadingDelay = 1000L
     private var karaokeProcessor: KaraokeMediaProcessor? = null
-    private val selectorHideDelay = 5000L // 5 seconds delay
-    private val scoreDisplayDelay = 10000L // 10 seconds delay
+    private val selectorHideDelay = 5000L
+    private val scoreDisplayDelay = 10000L
     private val selectorHandler = Handler(Looper.getMainLooper())
     private var selectorHideRunnable: Runnable? = null
     private var scoreHideRunnable: Runnable? = null
@@ -83,7 +86,8 @@ class KaraokePlayerCore private constructor() {
     }
 
     private fun setupBackgroundVideo() {
-        val uri = directoryManager.getBackgroundFromBgDir() ?: "android.resource://${context.packageName}/${R.raw.karaokebg}".toUri()
+        val uri = directoryManager.getBackgroundFromBgDir()
+            ?: "android.resource://${context.packageName}/${R.raw.karaokebg}".toUri()
         binding.videoView.setMediaController(null)
         binding.videoView.setVideoURI(uri)
         binding.videoView.setOnPreparedListener {
@@ -141,7 +145,8 @@ class KaraokePlayerCore private constructor() {
             return true
         } else if (keyCode == KeyEvent.KEYCODE_ENTER ||
             keyCode == KeyEvent.KEYCODE_MEDIA_PLAY ||
-            keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
+            keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+        ) {
             foundSong?.let {
                 Log.d("Player", "Selected song: ${it.number} - ${it.title}")
                 addSongToQueue(it)
@@ -161,6 +166,13 @@ class KaraokePlayerCore private constructor() {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             context.startActivity(intent)
             return true
+        } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT || keyCode == KeyEvent.KEYCODE_X) {
+            if (karaokeProcessor != null) {
+                val speed: Double = karaokeProcessor?.getSpeed() ?: 1.0
+                karaokeProcessor?.setSpeed(if (speed == 1.0) 5.0 else 1.0)
+                binding.playerQueueBar.metaSpeed.visibility =
+                    if (speed == 1.0) View.VISIBLE else View.GONE
+            }
         }
         return false
     }
@@ -287,6 +299,14 @@ class KaraokePlayerCore private constructor() {
 
         currentSong = song
         lyricManager.initLyricFromSong(song)
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            judgementManager.initJudgementFromPath(song)
+            judgementManager.startPitchDetection(context)
+        }
         karaokeProcessor = KaraokeMediaProcessor()
         karaokeProcessor?.processSong(currentSong!!)
         karaokeProcessor?.start()
@@ -363,10 +383,15 @@ class KaraokePlayerCore private constructor() {
         }
     }
 
+    fun emptyLyric() {
+        lyricManager.clearLyricViews()
+    }
+
     fun cleanup() {
         karaokeProcessor?.stop(true)
         lyricManager.clearLyricViews()
         scoreManager.setScoreVisible(false)
+        judgementManager.stopPitchDetection()
         currentSong = null
         queueSongList.clear()
         songList.clear()

@@ -150,6 +150,8 @@ class KaraokeMediaProcessor : KaraokePlayerProcessor() {
             }
         }
         stopLyricUpdate()
+        core.getLyricManager().clearLyricViews()
+
         if (interrupted) {
             cleanup()
         }
