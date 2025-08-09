@@ -25,6 +25,7 @@ class PlayerActivity : AppCompatActivity() {
         core.initialize(this, binding)
         setContentView(binding.root)
 
+        //TODO: Help with the blurry please!
 //        Blurry.with(this)
 //            .radius(10)
 //            .sampling(8)

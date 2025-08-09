@@ -221,6 +221,7 @@ class KaraokePlayerCore private constructor() {
 
     fun showScore(score: Int) {
         scoreManager.setScoreVisible(true)
+        AudioManager.getInstance(context).playScoreSoundEffect()
         scoreManager.setScoreText(score)
 
         scoreHideRunnable?.let { Handler(Looper.getMainLooper()).removeCallbacks(it) }

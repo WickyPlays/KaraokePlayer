@@ -44,4 +44,8 @@ class AudioManager private constructor(context: Context) {
             start()
         }
     }
+
+    fun playScoreSoundEffect() {
+        playSoundEffect(R.raw.sample_score)
+    }
 }
