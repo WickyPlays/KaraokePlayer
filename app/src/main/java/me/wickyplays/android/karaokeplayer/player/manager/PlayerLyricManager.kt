@@ -295,7 +295,7 @@ class PlayerLyricManager(
                 flipped = false
             } else {
                 val transitionTime = prevGroup.first().s +
-                        (prevGroup.last().e - prevGroup.first().s) / 2
+                        (prevGroup.last().e - prevGroup.first().s) / 3
 
                 if (!flipped) {
                     frames.add(LyricFrame(

@@ -22,6 +22,7 @@ import me.wickyplays.android.karaokeplayer.player.manager.PlayerJudgementManager
 import me.wickyplays.android.karaokeplayer.player.manager.PlayerLoadingManager
 import me.wickyplays.android.karaokeplayer.player.manager.PlayerLyricManager
 import me.wickyplays.android.karaokeplayer.player.manager.PlayerScoreManager
+import me.wickyplays.android.karaokeplayer.player.manager.PlayerSongMenuManager
 import me.wickyplays.android.karaokeplayer.player.manager.PlayerSongQueueManager
 import me.wickyplays.android.karaokeplayer.player.obj.Song
 import me.wickyplays.android.karaokeplayer.player.processors.KaraokeMediaProcessor
@@ -41,12 +42,14 @@ class KaraokePlayerCore private constructor() {
     private var scoreHideRunnable: Runnable? = null
     private var songSelectorHideRunnable: Runnable? = null
 
+    // Managers
     private lateinit var songQueueManager: PlayerSongQueueManager
     private lateinit var loadingManager: PlayerLoadingManager
     private lateinit var lyricManager: PlayerLyricManager
     private lateinit var directoryManager: PlayerDirectoryManager
     private lateinit var scoreManager: PlayerScoreManager
     private lateinit var judgementManager: PlayerJudgementManager
+    private lateinit var songMenuManager: PlayerSongMenuManager
 
     companion object {
         val instance: KaraokePlayerCore by lazy {
@@ -67,6 +70,9 @@ class KaraokePlayerCore private constructor() {
         songQueueManager = PlayerSongQueueManager(binding)
         scoreManager = PlayerScoreManager(binding)
         judgementManager = PlayerJudgementManager(binding)
+        songMenuManager = PlayerSongMenuManager(context, binding).apply {
+            initialize(songList) { song -> addSongToQueue(song) }
+        }
 
         setupBackgroundVideo()
         setupSongSelector()
@@ -183,6 +189,9 @@ class KaraokePlayerCore private constructor() {
                 binding.playerQueueBar.metaSpeed.visibility =
                     if (speed == 1.0) View.VISIBLE else View.GONE
             }
+        } else if (keyCode == KeyEvent.KEYCODE_MENU) {
+            songMenuManager.toggleMenuVisibility()
+            return true
         }
         return false
     }
@@ -321,6 +330,7 @@ class KaraokePlayerCore private constructor() {
 
     fun addSong(song: Song) {
         songList.add(song)
+        songMenuManager.addSong(song)
     }
 
     fun addSongToQueue(song: Song) {
