@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KaraokePlayer</string>
+
+    <string name="home_play_karaoke">Phát karaoke</string>
+    <string name="home_edit_karaoke">Chỉnh sửa karaoke</string>
+    <string name="home_pitch_detection">Phát hiện cao độ</string>
+    <string name="home_settings">Cài đặt</string>
+    <string name="home_exit">Thoát</string>
+    <string name="home_fps">FPS: %1$d</string>
+
+    <string name="player_score_title">Điểm của bạn là</string>
+    <string name="player_score_default_comment">Không nghe thấy giọng của bạn!</string>
+    <string name="player_score_default_value">0</string>
+    <string name="player_score_your_voice_cannot_be_heard">Không thể nghe được giọng của bạn</string>
+    <string name="player_score_you_need_to_practice_more">Bạn cần luyện tập thêm</string>
+    <string name="player_score_not_bad">Cần cố gắng hơn</string>
+    <string name="player_score_good_job">Làm tốt lắm!</string>
+    <string name="player_score_perfect_score">Điểm số hoàn hảo</string>
+
+    <string name="edit_title">Không được hỗ trợ</string>
+    <string name="edit_message">Vui lòng truy cập trang web của chúng tôi tại\n\nhttps://wickykaraokeplayer.vercel.app\n\nđể chỉnh sửa bài hát của bạn.</string>
+    <string name="edit_got_it_button">Tôi đã hiểu</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_general">General</string>
+    <string name="settings_lyrics">Lyrics</string>
+    <string name="lyrics_outlined_color">Outlined Color</string>
+    <string name="lyrics_filled_color">Filled Color</string>
+
+    <string name="pitch_detector_title">Phát Hiện Cao Độ</string>
+    <string name="pitch_detector_start">Bắt đầu</string>
+    <string name="pitch_detector_stop">Dừng</string>
+    <string name="pitch_detector_current_note">Nốt hiện tại: %1$s (%2$d Hz)</string>
+    <string name="pitch_detector_last_note">Nốt trước: %1$s (%2$d Hz)</string>
+    <string name="pitch_detector_no_note">Không phát hiện nốt</string>
+    <string name="pitch_detector_na">Không có</string>
+    <string name="pitch_detector_octave">Quãng tám: %1$s</string>
+    <string name="pitch_detector_volume">Âm lượng: %1$d%%</string>
+    <string name="pitch_detector_instructions_start">Nhấn Bắt đầu để bắt đầu phát hiện cao độ</string>
+    <string name="pitch_detector_instructions_permission">Bạn cần cấp quyền sử dụng microphone</string>
+    <string name="pitch_detector_error_microphone">Từ chối truy cập microphone</string>
+    <string name="pitch_detector_detune_sharp">%1$d cent cao</string>
+    <string name="pitch_detector_detune_flat">%1$d cent thấp</string>
+</resources>
