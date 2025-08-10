@@ -3,6 +3,7 @@
     <string name="app_name">KaraokePlayer</string>
 
     <string name="home_play_karaoke">Phát karaoke</string>
+    <string name="home_open_directory">Mở thư mục</string>
     <string name="home_edit_karaoke">Chỉnh sửa karaoke</string>
     <string name="home_pitch_detection">Phát hiện cao độ</string>
     <string name="home_settings">Cài đặt</string>

@@ -82,7 +82,16 @@ class PlayerLyricManager(
             }
         } catch (e: Exception) {
             Log.e("Player", "Error reading lyric file: ${e.message}")
-            frames = emptyList()
+            setMetadata(
+                Metadata(
+                    title = song.title ?: "Unknown title",
+                    artist = "Sáng tác: ${song.artist ?: "Unknown artist"}",
+                    charter = "Tạo dựng: ${song.charter ?: "Unknown charter"}",
+                    lyricist = "Lời hát: ${song.lyricist ?: "Unknown lyricist"}"
+                )
+            )
+
+            frames = createLyricFrames(song, emptyList())
             lyricGroups = emptyList()
             setLyricTopView(null)
             setLyricBottomView(null)
@@ -201,7 +210,28 @@ class PlayerLyricManager(
     private fun createLyricFrames(song: Song, groups: List<List<LyricNode>>): List<LyricFrame> {
         val frames = mutableListOf<LyricFrame>()
 
-        if (groups.isEmpty()) return frames
+        Log.d("Player", "Checking for lyric frames")
+
+        // Check if groups are null or empty
+        if (groups.isEmpty() || groups.all { it.isEmpty() }) {
+            Log.d("Player", "No lyric frames found")
+            // Add 10-second title frame since there are no lyrics
+            frames.add(LyricFrame(
+                type = LyricFrameType.TITLE_SHOW,
+                time = 0.0,
+                metadata = Metadata(
+                    title = song.title ?: "Unknown title",
+                    artist = song.artist ?: "Unknown artist",
+                    charter = song.charter ?: "Unknown charter",
+                    lyricist = song.lyricist ?: "Unknown lyricist"
+                )
+            ))
+            frames.add(LyricFrame(
+                type = LyricFrameType.TITLE_HIDE,
+                time = 10.0
+            ))
+            return frames
+        }
 
         val firstGroup = groups[0]
         val firstGroupStartTime = firstGroup.firstOrNull()?.s ?: 0.0

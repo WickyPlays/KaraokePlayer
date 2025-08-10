@@ -4,7 +4,6 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -15,17 +14,15 @@ import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
 import androidx.core.view.children
+import androidx.core.view.isVisible
 import me.wickyplays.android.karaokeplayer.R
 import me.wickyplays.android.karaokeplayer.databinding.ActivityHomeBinding
 import me.wickyplays.android.karaokeplayer.player.AudioManager
-import androidx.core.view.isVisible
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
@@ -42,55 +39,55 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        buttonActions = listOf(
-            ButtonAction(getString(R.string.home_play_karaoke), {
-                val intent = Intent(this, PlayerActivity::class.java)
-                startActivity(intent)
-                finish()
-            }),
-            ButtonAction(getString(R.string.home_edit_karaoke), {
-                showEditNotificationDialog()
-                AudioManager.getInstance(this).playSoundEffect(R.raw.click)
-            }),
-            ButtonAction(getString(R.string.home_pitch_detection), {
-                val intent = Intent(this, PitchDetectorActivity::class.java)
-                startActivity(intent)
-                AudioManager.getInstance(this).playSoundEffect(R.raw.click)
-            }),
-            ButtonAction(getString(R.string.home_settings), {
-                val intent = Intent(this, SettingsActivity::class.java)
-                startActivity(intent)
-                AudioManager.getInstance(this).playSoundEffect(R.raw.click)
-            }),
-            ButtonAction(getString(R.string.home_exit)) {
-                finishAffinity()
-                AudioManager.getInstance(this).playSoundEffect(R.raw.click)
-            }
-        )
+        setupButtonActions()
 
         binding = ActivityHomeBinding.inflate(layoutInflater)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         setContentView(binding.root)
+
         setupBackgroundVideo()
-        playTitleMusic()
         setupButtons()
-        binding.buttonContainer.children.firstOrNull()?.let {
-            it.requestFocus()
-            updateButtonSelection()
-        }
+        setupInitialFocus()
+        setupSystemUi()
+
+        playTitleMusic()
         startFpsCounter()
     }
 
+    private fun setupButtonActions() {
+        buttonActions = listOf(
+            ButtonAction(getString(R.string.home_play_karaoke), {
+                startActivity(Intent(this, PlayerActivity::class.java))
+                finish()
+            }),
+            ButtonAction(getString(R.string.home_open_directory), {
+                startActivity(Intent(this, DirectoryActivity::class.java))
+            }),
+            ButtonAction(getString(R.string.home_edit_karaoke), ::showEditNotificationDialog),
+            ButtonAction(getString(R.string.home_pitch_detection), {
+                startActivity(Intent(this, PitchDetectorActivity::class.java))
+                playClickSound()
+            }),
+            ButtonAction(getString(R.string.home_settings), {
+                startActivity(Intent(this, SettingsActivity::class.java))
+                playClickSound()
+            }),
+            ButtonAction(getString(R.string.home_exit), ::exitApp)
+        )
+    }
+
     private fun setupBackgroundVideo() {
-        binding.videoView.setMediaController(null)
-        binding.videoView.setVideoURI("android.resource://${packageName}/${R.raw.bg}".toUri())
-        binding.videoView.setOnPreparedListener {
-            it.isLooping = true
-            binding.videoView.start()
-        }
-        binding.videoView.setOnErrorListener { mp, what, extra ->
-            Log.e("VideoView", "Error occurred: what=$what, extra=$extra")
-            true
+        binding.videoView.apply {
+            setMediaController(null)
+            setVideoURI("android.resource://${packageName}/${R.raw.bg}".toUri())
+            setOnPreparedListener {
+                it.isLooping = true
+                start()
+            }
+            setOnErrorListener { _, what, extra ->
+                Log.e("VideoView", "Error occurred: what=$what, extra=$extra")
+                true
+            }
         }
     }
 
@@ -106,9 +103,8 @@ class HomeActivity : AppCompatActivity() {
                 setOnClickListener {
                     selectedIndex = index
                     updateButtonSelection()
-                    val dialog = binding.homeEditNotification.root
-                    if (dialog.isVisible) {
-                        dialog.visibility = View.GONE
+                    if (binding.homeEditNotification.root.isVisible) {
+                        binding.homeEditNotification.root.visibility = View.GONE
                     } else {
                         buttonAction.action.invoke()
                     }
@@ -122,12 +118,34 @@ class HomeActivity : AppCompatActivity() {
             }
             binding.buttonContainer.addView(button)
         }
+
         binding.root.setOnKeyListener { _, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN) {
-                handleKeyEvent(keyCode)
-            } else {
-                false
+            if (event.action == KeyEvent.ACTION_DOWN) handleKeyEvent(keyCode) else false
+        }
+    }
+
+    private fun setupInitialFocus() {
+        binding.buttonContainer.children.firstOrNull()?.requestFocus()
+        updateButtonSelection()
+    }
+
+    private fun setupSystemUi() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.let { controller ->
+                controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                controller.systemBarsBehavior =
+                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    )
         }
     }
 
@@ -144,10 +162,8 @@ class HomeActivity : AppCompatActivity() {
             }
 
             KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER -> {
-                val dialog = binding.homeEditNotification.root
-
-                if (dialog.isVisible) {
-                    dialog.visibility = View.GONE
+                if (binding.homeEditNotification.root.isVisible) {
+                    binding.homeEditNotification.root.visibility = View.GONE
                 } else {
                     buttonActions[selectedIndex].action.invoke()
                 }
@@ -163,7 +179,6 @@ class HomeActivity : AppCompatActivity() {
             selectedIndex--
             binding.buttonContainer.getChildAt(selectedIndex).requestFocus()
             updateButtonSelection()
-            AudioManager.getInstance(this).playSoundEffect(R.raw.click)
         }
     }
 
@@ -172,22 +187,24 @@ class HomeActivity : AppCompatActivity() {
             selectedIndex++
             binding.buttonContainer.getChildAt(selectedIndex).requestFocus()
             updateButtonSelection()
-            AudioManager.getInstance(this).playSoundEffect(R.raw.click)
         }
     }
 
     private fun updateButtonSelection() {
+        playClickSound()
         binding.buttonContainer.children.forEachIndexed { index, view ->
-            val button = view as Button
-            button.backgroundTintList = ColorStateList.valueOf(
+            (view as Button).backgroundTintList = ColorStateList.valueOf(
                 if (index == selectedIndex) selectedColor else unselectedColor
             )
-            AudioManager.getInstance(this).playSoundEffect(R.raw.click)
         }
     }
 
     private fun playTitleMusic() {
         AudioManager.getInstance(this).playHomeMusic()
+    }
+
+    private fun playClickSound() {
+        AudioManager.getInstance(this).playSoundEffect(R.raw.click)
     }
 
     private fun startFpsCounter() {
@@ -211,19 +228,17 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun showEditNotificationDialog() {
-        val dialog = binding.homeEditNotification.root
-        dialog.visibility = View.VISIBLE
-
-        val closeButton = binding.homeEditNotification.closeButton
-        val gotitButton = binding.homeEditNotification.gotItButton
-
-        closeButton.setOnClickListener {
-            dialog.visibility = View.GONE
+        binding.homeEditNotification.apply {
+            root.visibility = View.VISIBLE
+            closeButton.setOnClickListener { root.visibility = View.GONE }
+            gotItButton.setOnClickListener { root.visibility = View.GONE }
         }
+        playClickSound()
+    }
 
-        gotitButton.setOnClickListener {
-            dialog.visibility = View.GONE
-        }
+    private fun exitApp() {
+        playClickSound()
+        finishAffinity()
     }
 
     override fun onPause() {
@@ -246,27 +261,8 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                window.insetsController?.let { controller ->
-                    controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-                    controller.systemBarsBehavior =
-                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                }
-                WindowInsets.Type.displayCutout()
-            } else {
-                @Suppress("DEPRECATION")
-                window.decorView.systemUiVisibility = (
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                                or View.SYSTEM_UI_FLAG_FULLSCREEN
-                                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        )
-            }
-        }
+        if (hasFocus) setupSystemUi()
     }
 
-    data class ButtonAction(val label: String, val action: () -> Unit)
+    private data class ButtonAction(val label: String, val action: () -> Unit)
 }

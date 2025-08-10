@@ -45,7 +45,7 @@
         <LinearLayout
             android:id="@+id/button_container"
             android:layout_width="371dp"
-            android:layout_height="309dp"
+            android:layout_height="wrap_content"
             android:baselineAligned="false"
             android:gravity="center"
             android:orientation="vertical"

@@ -3,6 +3,7 @@
     <string name="app_name">KaraokePlayer</string>
 
     <string name="home_play_karaoke">Play karaoke</string>
+    <string name="home_open_directory">Open directory</string>
     <string name="home_edit_karaoke">Edit karaoke</string>
     <string name="home_pitch_detection">Pitch Detector</string>
     <string name="home_settings">Settings</string>

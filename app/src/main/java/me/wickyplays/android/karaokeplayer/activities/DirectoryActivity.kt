@@ -1,41 +1,24 @@
 package me.wickyplays.android.karaokeplayer.activities
 
-import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
+import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
-import me.wickyplays.android.karaokeplayer.databinding.ActivityPlayerBinding
-import me.wickyplays.android.karaokeplayer.player.KaraokePlayerCore
+import me.wickyplays.android.karaokeplayer.R
 
-class PlayerActivity : AppCompatActivity() {
+class DirectoryActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityPlayerBinding
-    private val core = KaraokePlayerCore.instance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityPlayerBinding.inflate(layoutInflater)
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-
-        core.initialize(this, binding)
-        setContentView(binding.root)
-
-        //TODO: Help with the blurry please!
-//        Blurry.with(this)
-//            .radius(10)
-//            .sampling(8)
-//            .color(Color.argb(66, 255, 255, 0))
-//            .async()
-//            .onto(binding.playerScore.root);
-
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        return core.handleKeyDown(keyCode) || super.onKeyDown(keyCode, event)
+        setContentView(R.layout.activity_directory)
+        val backButton: ImageButton = findViewById(R.id.backButton)
+        backButton.setOnClickListener {
+            finish()
+        }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
