@@ -49,6 +49,14 @@ class PlayerLyricManager(
     )
 
     fun initLyricFromSong(song: Song) {
+        if (song.lyricPath.isNullOrBlank()) {
+            frames = emptyList()
+            lyricGroups = emptyList()
+            setLyricTopView(null)
+            setLyricBottomView(null)
+            return
+        }
+
         try {
             val lyricPath = song.lyricPath
             if (lyricPath != null) {
@@ -74,6 +82,10 @@ class PlayerLyricManager(
             }
         } catch (e: Exception) {
             Log.e("Player", "Error reading lyric file: ${e.message}")
+            frames = emptyList()
+            lyricGroups = emptyList()
+            setLyricTopView(null)
+            setLyricBottomView(null)
         }
     }
 

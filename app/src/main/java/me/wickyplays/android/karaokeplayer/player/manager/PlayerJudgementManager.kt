@@ -34,16 +34,19 @@ class PlayerJudgementManager(val binding: ActivityPlayerBinding) {
     private var ignoreOctaves = true
 
     fun initJudgementFromPath(song: Song): List<JudgementNode> {
-        return try {
+        if (song.judgementPath.isNullOrBlank()) {
+            judgementNodes = emptyList()
+            return emptyList()
+        }
+
+        val newJudgementNodes = try {
             val judgementPath = song.judgementPath
             if (judgementPath != null) {
                 Log.d("Player", "Reading judgement file: $judgementPath")
                 val judgementFile = File(judgementPath)
                 if (judgementFile.exists()) {
                     val judgementContent = judgementFile.readText()
-                    val parsedNodes = parseJudgementJson(judgementContent)
-                    judgementNodes = parsedNodes
-                    parsedNodes
+                    parseJudgementJson(judgementContent)
                 } else {
                     Log.e("Player", "Judgement file not found at path: $judgementPath")
                     emptyList()
@@ -53,9 +56,12 @@ class PlayerJudgementManager(val binding: ActivityPlayerBinding) {
                 emptyList()
             }
         } catch (e: Exception) {
-            Log.e("Player", "Error reading judgement file: ${e.message}")
+            Log.e("Player", "Error reading/parsing judgement file: ${e.message}")
             emptyList()
         }
+
+        judgementNodes = newJudgementNodes
+        return newJudgementNodes
     }
 
     private fun parseJudgementJson(jsonContent: String): List<JudgementNode> {

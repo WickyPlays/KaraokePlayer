@@ -17,6 +17,7 @@ import androidx.core.net.toUri
 import me.wickyplays.android.karaokeplayer.R
 import me.wickyplays.android.karaokeplayer.activities.HomeActivity
 import me.wickyplays.android.karaokeplayer.databinding.ActivityPlayerBinding
+import me.wickyplays.android.karaokeplayer.player.enums.SongType
 import me.wickyplays.android.karaokeplayer.player.manager.PlayerDirectoryManager
 import me.wickyplays.android.karaokeplayer.player.manager.PlayerJudgementManager
 import me.wickyplays.android.karaokeplayer.player.manager.PlayerLoadingManager
@@ -321,11 +322,24 @@ class KaraokePlayerCore private constructor() {
             judgementManager.initJudgementFromPath(song)
             judgementManager.startPitchDetection(context)
         }
-        karaokeProcessor = KaraokeMediaProcessor()
+
+        if (song.songType == SongType.MIDI) {
+            karaokeProcessor = KaraokeMediaProcessor()
+        } else if (song.songType == SongType.AUDIO) {
+            karaokeProcessor = KaraokeMediaProcessor()
+        } else {
+            karaokeProcessor = null
+        }
+
+        showSongSelectorVisible(false)
+
+        if (karaokeProcessor == null) {
+            skipToNextSong()
+            return
+        }
         karaokeProcessor?.processSong(currentSong!!)
         karaokeProcessor?.start()
 
-        showSongSelectorVisible(false)
     }
 
     fun addSong(song: Song) {

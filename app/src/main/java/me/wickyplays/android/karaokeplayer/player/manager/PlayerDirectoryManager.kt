@@ -39,10 +39,6 @@ class PlayerDirectoryManager(context: Context) {
         }
     }
 
-    private fun scanBackgroundFolders() {
-        // Empty as requested
-    }
-
     private fun scanSongDirs() {
         Log.d("Player", "Scanning song folders at $defaultSongsDir")
         defaultSongsDir.listFiles()?.filter { it.isDirectory }?.forEach { folder ->
@@ -52,6 +48,14 @@ class PlayerDirectoryManager(context: Context) {
                     val configContent = configFile.readText()
                     val config = gson.fromJson(configContent, Song.SongConfig::class.java)
 
+                    // Determine song type based on file extension
+                    val songFile = File(folder, config.song_path)
+                    val audioSongType = when (songFile.extension.lowercase()) {
+                        "mid", "kar" -> SongType.MIDI
+                        "mp3", "wav", "ogg", "aac", "flac", "m4a" -> SongType.AUDIO
+                        else -> SongType.NONE
+                    }
+
                     val song = Song {
                         number = config.number
                         title = config.title
@@ -59,12 +63,12 @@ class PlayerDirectoryManager(context: Context) {
                         artist = config.artist
                         charter = config.charter
                         lyricist = config.lyricist
-                        songPath = File(folder, config.song_path).absolutePath
+                        songPath = songFile.absolutePath
                         lyricPath = File(folder, config.lyric_path).absolutePath
                         bgPath = config.bg_path?.let { File(folder, it).absolutePath }
                         judgementPath = File(folder, config.judgement_path).absolutePath
                         parentFolder = folder.absolutePath
-                        songType = SongType.MIDI
+                        songType = audioSongType
                     }
 
                     KaraokePlayerCore.instance.addSong(song)
