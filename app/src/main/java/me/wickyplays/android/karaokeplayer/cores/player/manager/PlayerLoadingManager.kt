@@ -1,4 +1,4 @@
-package me.wickyplays.android.karaokeplayer.player.manager
+package me.wickyplays.android.karaokeplayer.cores.player.manager
 
 import android.content.Context
 import android.view.View

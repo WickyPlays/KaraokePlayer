@@ -8,7 +8,7 @@ import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.TextView
 import me.wickyplays.android.karaokeplayer.R
-import me.wickyplays.android.karaokeplayer.player.obj.Song
+import me.wickyplays.android.karaokeplayer.cores.player.obj.Song
 
 class PlayerSongMenuAdapter(
     context: Context,

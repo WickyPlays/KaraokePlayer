@@ -1,4 +1,4 @@
-package me.wickyplays.android.karaokeplayer.player.manager
+package me.wickyplays.android.karaokeplayer.cores.player.manager
 
 import me.wickyplays.android.karaokeplayer.databinding.ActivityPlayerBinding
 

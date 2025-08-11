@@ -1,10 +1,11 @@
-package me.wickyplays.android.karaokeplayer.player.manager
+package me.wickyplays.android.karaokeplayer.cores.player.manager
 
 import android.content.Context
 import android.view.KeyEvent
 import android.view.View
 import me.wickyplays.android.karaokeplayer.databinding.ActivityPlayerBinding
-import me.wickyplays.android.karaokeplayer.player.obj.Song
+import me.wickyplays.android.karaokeplayer.cores.player.obj.Song
+import me.wickyplays.android.karaokeplayer.player.manager.PlayerSongMenuAdapter
 
 class PlayerSongMenuManager(
     private val context: Context,

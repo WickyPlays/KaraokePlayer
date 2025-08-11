@@ -1,4 +1,4 @@
-package me.wickyplays.android.karaokeplayer.player
+package me.wickyplays.android.karaokeplayer.cores.player
 
 import android.Manifest
 import android.content.Context
@@ -16,17 +16,17 @@ import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
 import me.wickyplays.android.karaokeplayer.R
 import me.wickyplays.android.karaokeplayer.activities.HomeActivity
+import me.wickyplays.android.karaokeplayer.cores.player.enums.SongType
+import me.wickyplays.android.karaokeplayer.cores.player.manager.PlayerDirectoryManager
+import me.wickyplays.android.karaokeplayer.cores.player.manager.PlayerJudgementManager
+import me.wickyplays.android.karaokeplayer.cores.player.manager.PlayerLoadingManager
+import me.wickyplays.android.karaokeplayer.cores.player.manager.PlayerLyricManager
+import me.wickyplays.android.karaokeplayer.cores.player.manager.PlayerScoreManager
+import me.wickyplays.android.karaokeplayer.cores.player.manager.PlayerSongMenuManager
+import me.wickyplays.android.karaokeplayer.cores.player.manager.PlayerSongQueueManager
+import me.wickyplays.android.karaokeplayer.cores.player.obj.Song
+import me.wickyplays.android.karaokeplayer.cores.player.processors.KaraokeMediaProcessor
 import me.wickyplays.android.karaokeplayer.databinding.ActivityPlayerBinding
-import me.wickyplays.android.karaokeplayer.player.enums.SongType
-import me.wickyplays.android.karaokeplayer.player.manager.PlayerDirectoryManager
-import me.wickyplays.android.karaokeplayer.player.manager.PlayerJudgementManager
-import me.wickyplays.android.karaokeplayer.player.manager.PlayerLoadingManager
-import me.wickyplays.android.karaokeplayer.player.manager.PlayerLyricManager
-import me.wickyplays.android.karaokeplayer.player.manager.PlayerScoreManager
-import me.wickyplays.android.karaokeplayer.player.manager.PlayerSongMenuManager
-import me.wickyplays.android.karaokeplayer.player.manager.PlayerSongQueueManager
-import me.wickyplays.android.karaokeplayer.player.obj.Song
-import me.wickyplays.android.karaokeplayer.player.processors.KaraokeMediaProcessor
 
 class KaraokePlayerCore private constructor() {
 
@@ -125,13 +125,7 @@ class KaraokePlayerCore private constructor() {
             foundSong = getSongFromNumber(songNumber)
             updatePlayerSongSelector()
 
-            songSelectorHideRunnable?.let { Handler(Looper.getMainLooper()).removeCallbacks(it) }
-            if (karaokeProcessor?.isRunning() == true) {
-                songSelectorHideRunnable = Runnable { showSongSelectorVisible(false) }
-                Handler(Looper.getMainLooper()).postDelayed(songSelectorHideRunnable!!, 5000L)
-            } else {
-                songSelectorHideRunnable = null
-            }
+            resetSongSelectorHideTimer()
 
             return true
         } else if (keyCode in KeyEvent.KEYCODE_NUMPAD_0..KeyEvent.KEYCODE_NUMPAD_9) {
@@ -145,13 +139,7 @@ class KaraokePlayerCore private constructor() {
             foundSong = getSongFromNumber(songNumber)
             updatePlayerSongSelector()
 
-            songSelectorHideRunnable?.let { Handler(Looper.getMainLooper()).removeCallbacks(it) }
-            if (karaokeProcessor?.isRunning() == true) {
-                songSelectorHideRunnable = Runnable { showSongSelectorVisible(false) }
-                Handler(Looper.getMainLooper()).postDelayed(songSelectorHideRunnable!!, 5000L)
-            } else {
-                songSelectorHideRunnable = null
-            }
+            resetSongSelectorHideTimer()
 
             return true
         } else if (keyCode == KeyEvent.KEYCODE_ENTER ||
@@ -383,6 +371,27 @@ class KaraokePlayerCore private constructor() {
     private fun updateSongSelectorVisibility() {
         val shouldBeVisible = queueSongList.isEmpty() || karaokeProcessor?.isRunning() != true
         showSongSelectorVisible(shouldBeVisible)
+    }
+
+    private fun resetSongSelectorHideTimer() {
+        // Remove any existing callbacks first
+        songSelectorHideRunnable?.let {
+            Handler(Looper.getMainLooper()).removeCallbacks(it)
+        }
+
+        if (karaokeProcessor?.isRunning() == true) {
+            showSongSelectorVisible(true)
+            songSelectorHideRunnable = Runnable {
+                showSongSelectorVisible(false)
+            }
+            // Schedule new runnable
+            Handler(Looper.getMainLooper()).postDelayed(
+                songSelectorHideRunnable!!,
+                5000L
+            )
+        } else {
+            songSelectorHideRunnable = null
+        }
     }
 
     fun cleanup() {

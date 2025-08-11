@@ -1,4 +1,4 @@
-package me.wickyplays.android.karaokeplayer.player.manager
+package me.wickyplays.android.karaokeplayer.cores.player.manager
 
 import android.Manifest
 import android.content.Context
@@ -8,8 +8,8 @@ import android.media.MediaRecorder
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import me.wickyplays.android.karaokeplayer.databinding.ActivityPlayerBinding
-import me.wickyplays.android.karaokeplayer.player.obj.JudgementNode
-import me.wickyplays.android.karaokeplayer.player.obj.Song
+import me.wickyplays.android.karaokeplayer.cores.player.obj.JudgementNode
+import me.wickyplays.android.karaokeplayer.cores.player.obj.Song
 import kotlin.math.*
 import java.io.File
 

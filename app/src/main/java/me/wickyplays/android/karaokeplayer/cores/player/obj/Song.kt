@@ -1,6 +1,6 @@
-package me.wickyplays.android.karaokeplayer.player.obj
+package me.wickyplays.android.karaokeplayer.cores.player.obj
 
-import me.wickyplays.android.karaokeplayer.player.enums.SongType
+import me.wickyplays.android.karaokeplayer.cores.player.enums.SongType
 
 class Song {
     var number: String = ""

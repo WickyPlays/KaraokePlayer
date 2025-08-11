@@ -1,4 +1,4 @@
-package me.wickyplays.android.karaokeplayer.player
+package me.wickyplays.android.karaokeplayer.cores.player
 
 import android.content.Context
 import android.media.MediaPlayer

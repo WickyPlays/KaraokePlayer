@@ -1,13 +1,12 @@
-package me.wickyplays.android.karaokeplayer.player.manager
+package me.wickyplays.android.karaokeplayer.cores.player.manager
 
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.google.gson.Gson
-import me.wickyplays.android.karaokeplayer.activities.PlayerActivity
-import me.wickyplays.android.karaokeplayer.player.KaraokePlayerCore
-import me.wickyplays.android.karaokeplayer.player.obj.Song
-import me.wickyplays.android.karaokeplayer.player.enums.SongType
+import me.wickyplays.android.karaokeplayer.cores.player.KaraokePlayerCore
+import me.wickyplays.android.karaokeplayer.cores.player.enums.SongType
+import me.wickyplays.android.karaokeplayer.cores.player.obj.Song
 import java.io.File
 
 class PlayerDirectoryManager(context: Context) {

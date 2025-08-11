@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <me.wickyplays.android.karaokeplayer.player.manager.KaraokeTextView
+    <me.wickyplays.android.karaokeplayer.cores.player.manager.KaraokeTextView
         android:id="@+id/lyricBottom"
         android:visibility="gone"
         android:layout_width="wrap_content"
@@ -22,7 +22,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <me.wickyplays.android.karaokeplayer.player.manager.KaraokeTextView
+    <me.wickyplays.android.karaokeplayer.cores.player.manager.KaraokeTextView
         android:id="@+id/lyricTop"
         android:visibility="gone"
         android:layout_width="wrap_content"

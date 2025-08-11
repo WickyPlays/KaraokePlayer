@@ -1,15 +1,13 @@
-package me.wickyplays.android.karaokeplayer.player.manager
+package me.wickyplays.android.karaokeplayer.cores.player.manager
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.View
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import me.wickyplays.android.karaokeplayer.cores.player.obj.LyricNode
+import me.wickyplays.android.karaokeplayer.cores.player.obj.Song
 import me.wickyplays.android.karaokeplayer.databinding.ActivityPlayerBinding
-import me.wickyplays.android.karaokeplayer.player.obj.LyricNode
-import me.wickyplays.android.karaokeplayer.player.obj.Song
 import java.io.File
 
 class PlayerLyricManager(

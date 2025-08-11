@@ -21,8 +21,8 @@ import androidx.core.net.toUri
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import me.wickyplays.android.karaokeplayer.R
+import me.wickyplays.android.karaokeplayer.cores.player.AudioManager
 import me.wickyplays.android.karaokeplayer.databinding.ActivityHomeBinding
-import me.wickyplays.android.karaokeplayer.player.AudioManager
 
 class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding

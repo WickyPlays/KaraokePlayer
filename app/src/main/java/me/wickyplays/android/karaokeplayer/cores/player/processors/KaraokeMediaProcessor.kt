@@ -1,15 +1,15 @@
-package me.wickyplays.android.karaokeplayer.player.processors
+package me.wickyplays.android.karaokeplayer.cores.player.processors
 
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import me.wickyplays.android.karaokeplayer.App
-import me.wickyplays.android.karaokeplayer.player.obj.Song
+import me.wickyplays.android.karaokeplayer.cores.player.obj.Song
 import java.io.IOException
 import androidx.core.net.toUri
-import me.wickyplays.android.karaokeplayer.player.KaraokePlayerCore
-import me.wickyplays.android.karaokeplayer.player.interfaces.KaraokePlayerProcessor
+import me.wickyplays.android.karaokeplayer.cores.player.KaraokePlayerCore
+import me.wickyplays.android.karaokeplayer.cores.player.interfaces.KaraokePlayerProcessor
 import java.util.concurrent.TimeUnit
 
 class KaraokeMediaProcessor : KaraokePlayerProcessor() {

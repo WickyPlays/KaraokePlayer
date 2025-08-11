@@ -1,6 +1,6 @@
-package me.wickyplays.android.karaokeplayer.player.interfaces
+package me.wickyplays.android.karaokeplayer.cores.player.interfaces
 
-import me.wickyplays.android.karaokeplayer.player.obj.Song
+import me.wickyplays.android.karaokeplayer.cores.player.obj.Song
 
 abstract class KaraokePlayerProcessor {
     abstract fun processSong(song: Song): Song

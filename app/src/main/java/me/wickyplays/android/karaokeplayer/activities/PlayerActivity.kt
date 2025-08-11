@@ -9,7 +9,7 @@ import android.view.WindowInsets
 import android.view.WindowInsetsController
 import androidx.appcompat.app.AppCompatActivity
 import me.wickyplays.android.karaokeplayer.databinding.ActivityPlayerBinding
-import me.wickyplays.android.karaokeplayer.player.KaraokePlayerCore
+import me.wickyplays.android.karaokeplayer.cores.player.KaraokePlayerCore
 
 class PlayerActivity : AppCompatActivity() {
 

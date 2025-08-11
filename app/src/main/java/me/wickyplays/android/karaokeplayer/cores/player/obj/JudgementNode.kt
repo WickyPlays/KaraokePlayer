@@ -1,4 +1,4 @@
-package me.wickyplays.android.karaokeplayer.player.obj
+package me.wickyplays.android.karaokeplayer.cores.player.obj
 
 data class JudgementNode(
     val n: Int,         // note number

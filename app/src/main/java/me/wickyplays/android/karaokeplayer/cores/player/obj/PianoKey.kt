@@ -1,4 +1,4 @@
-package me.wickyplays.android.karaokeplayer.player.obj
+package me.wickyplays.android.karaokeplayer.cores.player.obj
 
 data class PianoKey(
     private var isBlack: Boolean,
