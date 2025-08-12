@@ -1,6 +1,8 @@
 package me.wickyplays.android.karaokeplayer.fragements
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,12 +11,15 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import me.wickyplays.android.karaokeplayer.R
 import me.wickyplays.android.karaokeplayer.cores.directories.KaraokeDirectoriesCore
+import java.io.File
 
 class DirectoriesFragment : Fragment() {
 
@@ -217,10 +222,42 @@ class DirectoriesFragment : Fragment() {
                 itemView.setOnClickListener {
                     if (isDirectory) {
                         onItemClick(item)
+                    } else {
+                        val virtualFullPath = "$currentPath/$item"
+                        val absolutePath = core.getAbsolutePath(virtualFullPath)
+                        if (absolutePath != null) {
+                            openFile(absolutePath)
+                        } else {
+                            Toast.makeText(requireContext(), "File path not found", Toast.LENGTH_SHORT).show()
+                        }
                     }
-                    // Do nothing if it's a file (for now)
+                }
+
+            }
+
+            private fun openFile(path: String) {
+                try {
+                    val file = File(path)
+                    Log.d("Player", "Opening file: $path")
+                    val uri = FileProvider.getUriForFile(
+                        requireContext(),
+                        "${requireContext().packageName}.fileprovider",
+                        file
+                    )
+                    val mimeType = requireContext().contentResolver.getType(uri) ?: "*/*"
+
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(uri, mimeType)
+                        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    }
+
+                    startActivity(Intent.createChooser(intent, "Open with"))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(requireContext(), "Cannot open file", Toast.LENGTH_SHORT).show()
                 }
             }
+
         }
     }
 }

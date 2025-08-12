@@ -107,6 +107,11 @@ class KaraokeDirectoriesCore private constructor() {
         }
     }
 
+    fun getAbsolutePath(relativePath: String): String? {
+        val externalFilesDir = appContext?.getExternalFilesDir(null) ?: return null
+        return File(externalFilesDir, relativePath).absolutePath
+    }
+
     fun getContext(): Context? {
         return appContext
     }
