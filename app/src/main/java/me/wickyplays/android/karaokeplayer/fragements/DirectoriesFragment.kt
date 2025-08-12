@@ -48,7 +48,6 @@ class DirectoriesFragment : Fragment() {
     }
 
     private fun setupViews() {
-        // Setup spinner with directory groups
         val directories: List<String> = core.getAllExternalDirectories()
         val dataAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, directories)
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -85,7 +84,6 @@ class DirectoriesFragment : Fragment() {
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
 
-        // Back button listener
         backButton.setOnClickListener {
             navigateBack()
         }
@@ -120,19 +118,20 @@ class DirectoriesFragment : Fragment() {
     }
 
     private fun updateContentList(path: String) {
-        var items = core.getItemsFromPath(path).sorted()
+        val items = core.getItemsFromPath(path).sorted()
         rightRecyclerView.adapter = ContentAdapter(path, items) { item ->
             val newPath = "$path/$item"
-            pathHistory.add(path)
-            currentPath = newPath
+            if (core.getItemsFromPath(newPath).isNotEmpty()) {
+                pathHistory.add(path)
+                currentPath = newPath
 
-            // Only show back button if we're inside a main category's subdirectory
-            val isInsideMainCategory = path.split('/').let { parts ->
-                parts.size >= 2 && mainCategories.contains(parts[1])
+                val isInsideMainCategory = path.split('/').let { parts ->
+                    parts.size >= 2 && mainCategories.contains(parts[1])
+                }
+                backButtonLayout.visibility = if (isInsideMainCategory) View.VISIBLE else View.GONE
+
+                updateContentList(newPath)
             }
-            backButtonLayout.visibility = if (isInsideMainCategory) View.VISIBLE else View.GONE
-
-            updateContentList(newPath)
         }
     }
 
@@ -199,19 +198,26 @@ class DirectoriesFragment : Fragment() {
 
                 textView.text = item
 
+                // Get the full path to determine if it's a directory or file
+                val fullPath = "$currentPath/$item"
+                val isDirectory = core.getItemsFromPath(fullPath).isNotEmpty()
+
                 val iconRes = when {
+                    isDirectory -> R.drawable.folder_24px
                     item.endsWith(".mp3") || item.endsWith(".wav") -> R.drawable.music_note_24px
-                    item.endsWith(".jpg") || item.endsWith(".png") -> R.drawable.image_24px
+                    item.endsWith(".jpg") || item.endsWith(".png") || item.endsWith(".jpeg") -> R.drawable.image_24px
                     item.endsWith(".sf2") -> R.drawable.audio_file_24px
-                    else -> R.drawable.folder_24px
+                    item.endsWith(".mid") || item.endsWith(".kar") -> R.drawable.lyrics_24px
+                    item.endsWith(".json") -> R.drawable.data_object_24px
+                    else -> R.drawable.description_24px
                 }
                 iconView.setImageResource(iconRes)
 
                 itemView.setOnClickListener {
-                    val fullPath = "$currentPath/$item"
-                    if (core.getItemsFromPath(fullPath).isNotEmpty()) {
+                    if (isDirectory) {
                         onItemClick(item)
                     }
+                    // Do nothing if it's a file (for now)
                 }
             }
         }
