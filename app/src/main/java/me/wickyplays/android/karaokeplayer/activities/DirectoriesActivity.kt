@@ -15,9 +15,8 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import me.wickyplays.android.karaokeplayer.R
 import me.wickyplays.android.karaokeplayer.cores.directories.KaraokeDirectoriesCore
-import me.wickyplays.android.karaokeplayer.cores.player.KaraokePlayerCore
 import me.wickyplays.android.karaokeplayer.databinding.ActivityDirectoryBinding
-import me.wickyplays.android.karaokeplayer.fragements.DirectoryFragment
+import me.wickyplays.android.karaokeplayer.fragements.DirectoriesFragment
 import me.wickyplays.android.karaokeplayer.fragements.DirectoriesOnlineFragment
 import me.wickyplays.android.karaokeplayer.fragements.DirectoriesUploadFragment
 
@@ -81,10 +80,10 @@ class TabsAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fra
 
     override fun createFragment(position: Int): Fragment {
         return when (position) {
-            0 -> DirectoryFragment()
+            0 -> DirectoriesFragment()
             1 -> DirectoriesOnlineFragment()
             2 -> DirectoriesUploadFragment()
-            else -> DirectoryFragment()
+            else -> DirectoriesFragment()
         }
     }
 }

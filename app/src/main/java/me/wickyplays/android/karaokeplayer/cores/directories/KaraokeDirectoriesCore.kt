@@ -89,8 +89,22 @@ class KaraokeDirectoriesCore private constructor() {
         }
     }
 
-    fun getAllDirectoriesCombined(): List<String> {
-        return getAllDirectories() + getAllExternalDirectories()
+    fun getItemsFromPath(path: String): List<String> {
+        return try {
+            val externalFilesDir = appContext!!.getExternalFilesDir(null)
+            if (externalFilesDir != null) {
+                val targetDir = File(externalFilesDir, path)
+                if (targetDir.exists() && targetDir.isDirectory) {
+                    targetDir.listFiles()?.map { it.name } ?: emptyList()
+                } else {
+                    emptyList()
+                }
+            } else {
+                emptyList()
+            }
+        } catch (e: SecurityException) {
+            emptyList()
+        }
     }
 
     fun getContext(): Context? {
