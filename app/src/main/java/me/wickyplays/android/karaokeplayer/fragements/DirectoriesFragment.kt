@@ -146,6 +146,7 @@ class DirectoriesFragment : Fragment() {
             return ViewHolder(view)
         }
 
+
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             holder.bind(categories[position])
         }
