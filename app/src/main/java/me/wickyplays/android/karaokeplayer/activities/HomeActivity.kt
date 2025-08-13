@@ -61,7 +61,7 @@ class HomeActivity : AppCompatActivity() {
                 finish()
             }),
             ButtonAction(getString(R.string.home_open_directory), {
-                startActivity(Intent(this, DirectoryActivity::class.java))
+                startActivity(Intent(this, DirectoriesActivity::class.java))
             }),
             ButtonAction(getString(R.string.home_edit_karaoke), ::showEditNotificationDialog),
             ButtonAction(getString(R.string.home_pitch_detection), {

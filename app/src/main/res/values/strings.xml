@@ -19,6 +19,13 @@
     <string name="player_score_good_job">Good job!</string>
     <string name="player_score_perfect_score">Perfect score</string>
 
+    <string name="directories_title">Directory manager</string>
+    <string name="directories_dir_choose_group">Choose group</string>
+    <string name="directories_dir_back">Back</string>
+    <string name="directories_dir_new">New</string>
+    <string name="directories_dir_upload">Upload</string>
+    <string name="directories_dir_enter_name">Enter name</string>
+
     <string name="edit_title">Not supported</string>
     <string name="edit_message">Please visit our website at\n\nhttps://wickykaraokeplayer.vercel.app\n\nin order to edit your own songs.</string>
     <string name="edit_got_it_button">Got it</string>

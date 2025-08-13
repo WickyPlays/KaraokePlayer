@@ -1,27 +1,27 @@
 package me.wickyplays.android.karaokeplayer.fragements
 
+import android.Manifest
+import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.Spinner
-import android.widget.TextView
-import android.widget.Toast
-import androidx.core.content.FileProvider
+import android.view.*
+import android.widget.*
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import me.wickyplays.android.karaokeplayer.R
 import me.wickyplays.android.karaokeplayer.cores.directories.KaraokeDirectoriesCore
-import java.io.File
 
 class DirectoriesFragment : Fragment() {
+
+    private companion object {
+        const val REQUEST_CODE_UPLOAD_FILE = 1001
+        const val REQUEST_CODE_STORAGE_PERMISSION = 1002
+    }
 
     private lateinit var core: KaraokeDirectoriesCore
     private lateinit var leftRecyclerView: RecyclerView
@@ -29,6 +29,8 @@ class DirectoriesFragment : Fragment() {
     private lateinit var spinner: Spinner
     private lateinit var backButtonLayout: View
     private lateinit var backButton: ImageButton
+    private lateinit var newButton: Button
+    private lateinit var uploadButton: Button
 
     private var currentGroup: String = ""
     private var currentPath: String = ""
@@ -47,6 +49,8 @@ class DirectoriesFragment : Fragment() {
         rightRecyclerView = view.findViewById(R.id.directoryContent)
         backButtonLayout = view.findViewById(R.id.backButtonLayout)
         backButton = view.findViewById(R.id.backButton)
+        newButton = view.findViewById(R.id.newButton)
+        uploadButton = view.findViewById(R.id.uploadButton)
 
         setupViews()
         return view
@@ -54,31 +58,26 @@ class DirectoriesFragment : Fragment() {
 
     private fun setupViews() {
         val directories: List<String> = core.getAllExternalDirectories()
-        val dataAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, directories)
+        val dataAdapter =
+            ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, directories)
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = dataAdapter
 
-        // Setup left RecyclerView (categories)
         leftRecyclerView.layoutManager = LinearLayoutManager(context)
         leftRecyclerView.addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL))
-
-        // Setup right RecyclerView (contents)
         rightRecyclerView.layoutManager = LinearLayoutManager(context)
         rightRecyclerView.addItemDecoration(DividerItemDecoration(context, LinearLayoutManager.VERTICAL))
 
-        // Hide back button initially
         backButtonLayout.visibility = View.GONE
 
-        // Set initial data
         if (directories.isNotEmpty()) {
             currentGroup = directories[0]
             currentPath = currentGroup
             updateCategoryList()
         }
 
-        // Spinner selection listener
-        spinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 currentGroup = parent?.getItemAtPosition(position).toString()
                 currentPath = currentGroup
                 pathHistory.clear()
@@ -86,12 +85,142 @@ class DirectoriesFragment : Fragment() {
                 updateCategoryList()
             }
 
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        backButton.setOnClickListener {
-            navigateBack()
+        backButton.setOnClickListener { navigateBack() }
+        newButton.setOnClickListener { showNewOptionsMenu(it) }
+        uploadButton.setOnClickListener { checkStoragePermissionAndUpload() }
+    }
+
+    private fun showNewOptionsMenu(view: View) {
+        val popup = PopupMenu(requireContext(), view)
+        popup.menuInflater.inflate(R.menu.directory_options_menu, popup.menu)
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.menu_new_file -> {
+                    showCreateFileDialog()
+                    true
+                }
+                R.id.menu_new_folder -> {
+                    showCreateFolderDialog()
+                    true
+                }
+                else -> false
+            }
         }
+        popup.show()
+    }
+
+    private fun showCreateFileDialog() {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.fragment_directories_dialog_createitem, null)
+        val editText = dialogView.findViewById<EditText>(R.id.itemNameEditText)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("New File")
+            .setView(dialogView)
+            .setPositiveButton("Create") { _, _ ->
+                val fileName = editText.text.toString().trim()
+                if (fileName.isNotEmpty()) {
+                    if (core.createNewFile(currentPath, fileName)) {
+                        updateContentList(currentPath)
+                        Toast.makeText(requireContext(), "File created successfully", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(requireContext(), "File already exists or couldn't be created", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Please enter a file name", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showCreateFolderDialog() {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.fragment_directories_dialog_createitem, null)
+        val editText = dialogView.findViewById<EditText>(R.id.itemNameEditText)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("New Folder")
+            .setView(dialogView)
+            .setPositiveButton("Create") { _, _ ->
+                val folderName = editText.text.toString().trim()
+                if (folderName.isNotEmpty()) {
+                    if (core.createNewFolder(currentPath, folderName)) {
+                        updateContentList(currentPath)
+                        Toast.makeText(requireContext(), "Folder created successfully", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(requireContext(), "Folder already exists or couldn't be created", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Please enter a folder name", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showRenameDialog(itemName: String) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.fragment_directories_dialog_rename, null)
+        val editText = dialogView.findViewById<EditText>(R.id.renameEditText)
+        editText.setText(itemName)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Rename Item")
+            .setView(dialogView)
+            .setPositiveButton("Rename") { _, _ ->
+                val newName = editText.text.toString().trim()
+                when {
+                    newName.isEmpty() -> Toast.makeText(requireContext(), "Please enter a new name", Toast.LENGTH_SHORT).show()
+                    newName == itemName -> Toast.makeText(requireContext(), "Name unchanged", Toast.LENGTH_SHORT).show()
+                    else -> {
+                        if (core.renameItem(currentPath, itemName, newName)) {
+                            updateContentList(currentPath)
+                            Toast.makeText(requireContext(), "Item renamed successfully", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(requireContext(), "Error renaming item", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showDetailsDialog(itemName: String) {
+        val details = core.getFileDetails(currentPath, itemName)
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.fragment_directories_dialog_details, null)
+
+        with(dialogView) {
+            findViewById<TextView>(R.id.detailName).text = details["name"] ?: "Unknown"
+            findViewById<TextView>(R.id.detailType).text = details["type"] ?: "Unknown"
+            findViewById<TextView>(R.id.detailSize).text = details["size"] ?: "Unknown"
+            findViewById<TextView>(R.id.detailCreated).text = details["created"] ?: "Unknown"
+            findViewById<TextView>(R.id.detailModified).text = details["modified"] ?: "Unknown"
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("File Details")
+            .setView(dialogView)
+            .setPositiveButton("OK", null)
+            .show()
+    }
+
+    private fun showDeleteConfirmation(itemName: String) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Delete Item")
+            .setMessage("Are you sure you want to delete '$itemName'?")
+            .setPositiveButton("Delete") { _, _ ->
+                if (core.deleteItem(currentPath, itemName)) {
+                    updateContentList(currentPath)
+                    Toast.makeText(requireContext(), "Item deleted successfully", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(requireContext(), "Error deleting item", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun navigateBack() {
@@ -116,15 +245,13 @@ class DirectoriesFragment : Fragment() {
             currentPath = "$currentGroup/$category"
             pathHistory.clear()
             updateContentList(currentPath)
-
-            // Don't show back button for main categories
             backButtonLayout.visibility = View.GONE
         }
     }
 
     private fun updateContentList(path: String) {
         val items = core.getItemsFromPath(path).sorted()
-        rightRecyclerView.adapter = ContentAdapter(path, items) { item ->
+        rightRecyclerView.adapter = ItemContentAdapter(path, items) { item ->
             val newPath = "$path/$item"
             if (core.getItemsFromPath(newPath).isNotEmpty()) {
                 pathHistory.add(path)
@@ -140,6 +267,65 @@ class DirectoriesFragment : Fragment() {
         }
     }
 
+    private fun checkStoragePermissionAndUpload() {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            startFileUpload()
+        } else {
+            requestPermissions(
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                REQUEST_CODE_STORAGE_PERMISSION
+            )
+        }
+    }
+
+    private fun startFileUpload() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            type = "*/*"
+            addCategory(Intent.CATEGORY_OPENABLE)
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false)
+        }
+        startActivityForResult(intent, REQUEST_CODE_UPLOAD_FILE)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            REQUEST_CODE_STORAGE_PERMISSION -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    startFileUpload()
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Storage permission is required to upload files",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_CODE_UPLOAD_FILE && resultCode == Activity.RESULT_OK) {
+            data?.data?.let { uri ->
+                if (core.handleFileUpload(currentPath, uri)) {
+                    updateContentList(currentPath)
+                    Toast.makeText(requireContext(), "File uploaded successfully", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(requireContext(), "Error uploading file", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     private inner class CategoryAdapter(
         private val categories: List<String>,
         private val onItemClick: (String) -> Unit
@@ -150,7 +336,6 @@ class DirectoriesFragment : Fragment() {
                 .inflate(R.layout.fragment_directories_dir_itemmenu, parent, false)
             return ViewHolder(view)
         }
-
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             holder.bind(categories[position])
@@ -179,11 +364,11 @@ class DirectoriesFragment : Fragment() {
         }
     }
 
-    private inner class ContentAdapter(
+    private inner class ItemContentAdapter(
         private val currentPath: String,
         private val items: List<String>,
         private val onItemClick: (String) -> Unit
-    ) : RecyclerView.Adapter<ContentAdapter.ViewHolder>() {
+    ) : RecyclerView.Adapter<ItemContentAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(parent.context)
@@ -197,14 +382,24 @@ class DirectoriesFragment : Fragment() {
 
         override fun getItemCount() = items.size
 
-        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnCreateContextMenuListener {
+            private lateinit var currentItem: String
+
+            init {
+                itemView.setOnCreateContextMenuListener(this)
+                itemView.setOnLongClickListener {
+                    itemView.showContextMenu()
+                    true
+                }
+            }
+
             fun bind(item: String) {
+                currentItem = item
                 val textView = itemView.findViewById<TextView>(R.id.itemName)
                 val iconView = itemView.findViewById<ImageView>(R.id.itemIcon)
 
                 textView.text = item
 
-                // Get the full path to determine if it's a directory or file
                 val fullPath = "$currentPath/$item"
                 val isDirectory = core.getItemsFromPath(fullPath).isNotEmpty()
 
@@ -223,41 +418,34 @@ class DirectoriesFragment : Fragment() {
                     if (isDirectory) {
                         onItemClick(item)
                     } else {
-                        val virtualFullPath = "$currentPath/$item"
-                        val absolutePath = core.getAbsolutePath(virtualFullPath)
-                        if (absolutePath != null) {
-                            openFile(absolutePath)
+                        val intent = core.getFileOpenIntent(fullPath)
+                        if (intent != null) {
+                            startActivity(Intent.createChooser(intent, "Open with"))
                         } else {
-                            Toast.makeText(requireContext(), "File path not found", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Cannot open file", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
-
             }
 
-            private fun openFile(path: String) {
-                try {
-                    val file = File(path)
-                    Log.d("Player", "Opening file: $path")
-                    val uri = FileProvider.getUriForFile(
-                        requireContext(),
-                        "${requireContext().packageName}.fileprovider",
-                        file
-                    )
-                    val mimeType = requireContext().contentResolver.getType(uri) ?: "*/*"
+            override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?) {
+                MenuInflater(v.context).inflate(R.menu.item_content_menu, menu)
 
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(uri, mimeType)
-                        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    }
+                menu.findItem(R.id.menu_rename).setOnMenuItemClickListener {
+                    showRenameDialog(currentItem)
+                    true
+                }
 
-                    startActivity(Intent.createChooser(intent, "Open with"))
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    Toast.makeText(requireContext(), "Cannot open file", Toast.LENGTH_SHORT).show()
+                menu.findItem(R.id.menu_details).setOnMenuItemClickListener {
+                    showDetailsDialog(currentItem)
+                    true
+                }
+
+                menu.findItem(R.id.menu_delete).setOnMenuItemClickListener {
+                    showDeleteConfirmation(currentItem)
+                    true
                 }
             }
-
         }
     }
 }

@@ -20,7 +20,7 @@ import me.wickyplays.android.karaokeplayer.fragements.DirectoriesFragment
 import me.wickyplays.android.karaokeplayer.fragements.DirectoriesOnlineFragment
 import me.wickyplays.android.karaokeplayer.fragements.DirectoriesUploadFragment
 
-class DirectoryActivity : AppCompatActivity() {
+class DirectoriesActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDirectoryBinding
 
@@ -28,9 +28,9 @@ class DirectoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_directory)
 
-        binding = ActivityDirectoryBinding.inflate(layoutInflater);
+        binding = ActivityDirectoryBinding.inflate(layoutInflater)
 
-        KaraokeDirectoriesCore.getInstance().initialize(this);
+        KaraokeDirectoriesCore.getInstance().initialize(this)
 
         val backButton: ImageButton = findViewById(R.id.backButton)
         backButton.setOnClickListener {
@@ -73,17 +73,17 @@ class DirectoryActivity : AppCompatActivity() {
             }
         }
     }
-}
 
-class TabsAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity) {
-    override fun getItemCount(): Int = 3
+    private inner class TabsAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity) {
+        override fun getItemCount(): Int = 3
 
-    override fun createFragment(position: Int): Fragment {
-        return when (position) {
-            0 -> DirectoriesFragment()
-            1 -> DirectoriesOnlineFragment()
-            2 -> DirectoriesUploadFragment()
-            else -> DirectoriesFragment()
+        override fun createFragment(position: Int): Fragment {
+            return when (position) {
+                0 -> DirectoriesFragment()
+                1 -> DirectoriesOnlineFragment()
+                2 -> DirectoriesUploadFragment()
+                else -> DirectoriesFragment()
+            }
         }
     }
 }

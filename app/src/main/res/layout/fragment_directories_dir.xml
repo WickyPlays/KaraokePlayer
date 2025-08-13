@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:baselineAligned="false"
     android:orientation="horizontal">
 
     <!-- Left side-->
@@ -11,7 +12,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:background="#5B5B5B"
+        android:background="@color/dark_gray"
         android:orientation="vertical"
         android:padding="8dp">
 
@@ -19,7 +20,7 @@
             android:id="@+id/directoryLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Choose group"
+            android:text="@string/directories_dir_choose_group"
             android:textColor="@android:color/white"
             android:textSize="15sp" />
 
@@ -27,16 +28,17 @@
             android:id="@+id/groupSpinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:background="@android:color/white"
             android:padding="8dp"
-            android:popupBackground="@android:color/white"
-            android:textColor="@android:color/black" />
+            android:popupBackground="@android:color/white" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/folderRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#3E3E3E" />
+            android:layout_marginTop="8dp"
+            android:background="@color/medium_gray" />
     </LinearLayout>
 
     <!--Right side-->
@@ -48,63 +50,65 @@
 
         <!-- Back button layout (initially hidden) -->
         <LinearLayout
-            android:visibility="gone"
             android:id="@+id/backButtonLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#6F6F6F"
+            android:background="@color/medium_dark_gray"
             android:orientation="horizontal"
             android:paddingHorizontal="8dp"
-            android:paddingVertical="3dp">
+            android:paddingVertical="12dp"
+            android:visibility="gone">
 
             <ImageButton
                 android:id="@+id/backButton"
                 android:layout_width="35dp"
                 android:layout_height="35dp"
+                android:contentDescription="@string/directories_dir_back"
                 android:src="@drawable/arrow_back_24px"
-                android:contentDescription="Back"
-                app:tint="@color/black" />
+                app:tint="@color/white" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:text="Back"
                 android:layout_gravity="center_vertical"
-                android:layout_marginStart="8dp"/>
+                android:layout_marginStart="8dp"
+                android:text="@string/directories_dir_back"
+                android:textColor="@color/white" />
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/directoryContent"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:background="@color/medium_dark_gray"
             android:layout_weight="1" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/dark_gray"
             android:orientation="horizontal"
             android:paddingHorizontal="8dp"
-            android:paddingVertical="3dp"
-            android:background="#6F6F6F">
+            android:paddingVertical="4dp">
 
             <Button
                 android:id="@+id/newButton"
                 android:layout_width="wrap_content"
-                android:layout_height="38dp"
-                android:text="New" />
-
-            <!-- Add more buttons here as needed -->
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
+                android:layout_height="40dp"
+                android:backgroundTint="@color/white"
+                android:textColor="@color/black"
+                android:minWidth="80dp"
+                android:text="@string/directories_dir_new" />
 
             <Button
-                android:id="@+id/settingsButton"
+                android:id="@+id/uploadButton"
                 android:layout_width="wrap_content"
-                android:layout_height="38dp"
-                android:text="Settings" />
+                android:layout_height="40dp"
+                android:backgroundTint="@color/white"
+                android:textColor="@color/black"
+                android:layout_marginStart="8dp"
+                android:minWidth="80dp"
+                android:text="@string/directories_dir_upload" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

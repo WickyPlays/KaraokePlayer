@@ -19,6 +19,13 @@
     <string name="player_score_good_job">Làm tốt lắm!</string>
     <string name="player_score_perfect_score">Điểm số hoàn hảo</string>
 
+    <string name="directories_title">Quản lí tệp tin</string>
+    <string name="directories_dir_choose_group">Chọn nhóm</string>
+    <string name="directories_dir_back">Quay lại</string>
+    <string name="directories_dir_new">Mới</string>
+    <string name="directories_dir_upload">Tải lên</string>
+    <string name="directories_dir_enter_name">Nhập tên tệp</string>
+
     <string name="edit_title">Không được hỗ trợ</string>
     <string name="edit_message">Vui lòng truy cập trang web của chúng tôi tại\n\nhttps://wickykaraokeplayer.vercel.app\n\nđể chỉnh sửa bài hát của bạn.</string>
     <string name="edit_got_it_button">Tôi đã hiểu</string>

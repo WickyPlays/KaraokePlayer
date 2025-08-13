@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="20dp"
-    android:background="#1F1F1F"
+    android:background="#3E3E3E"
     tools:context=".activities.PitchDetectorActivity">
 
     <ImageButton
@@ -14,7 +14,6 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginStart="15dp"
-        android:layout_marginTop="20dp"
         android:backgroundTint="#FFFFFF"
         android:src="@drawable/arrow_back_24px"
         app:layout_constraintStart_toStartOf="parent"
@@ -156,7 +155,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/pitch_detector_instructions_start"
-            android:textColor="#666666" />
+            android:textColor="#FFFFFF" />
 
         <TextView
             android:layout_width="wrap_content"
